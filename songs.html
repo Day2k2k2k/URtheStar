@@ -165,6 +165,15 @@
       font-weight: 500;
     }
 
+    .song-title {
+      color: #ffffff;
+    }
+
+    .song-artist {
+      color: var(--cyan);
+      font-weight: 400;
+    }
+
     .song-genre {
       font-size: 11px;
       padding: 3px 10px;
@@ -406,7 +415,7 @@
 <body>
 
 <header>
-  <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:48px; width:auto; display:block;">
+  <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:96px; width:auto; display:block;">
   <a href="index.html" class="back-link">← Back to Home</a>
 </header>
 
@@ -643,8 +652,11 @@
   songs.forEach(li => {
     const text = li.textContent.trim();
     const genre = li.dataset.genre;
+    const parts = text.split(' – ');
+    const songTitle = parts[0];
+    const artist = parts.length > 1 ? ' – ' + parts.slice(1).join(' – ') : '';
     li.innerHTML = `
-      <span class="song-name">${text}</span>
+      <span class="song-name"><span class="song-title">${songTitle}</span><span class="song-artist">${artist}</span></span>
       <span class="song-genre">${genre}</span>
       <span class="sing-arrow">›</span>
     `;
