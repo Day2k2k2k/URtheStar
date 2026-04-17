@@ -267,11 +267,14 @@
       background: #000;
       height: 100%;
       overflow: hidden;
+      position: relative;
     }
 
     #playerWrap {
-      flex: 1;
-      position: relative;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: calc(100% - 36px);
       background: #000;
     }
 
@@ -282,23 +285,16 @@
       height: 100% !important;
     }
 
-    .video-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 16px;
-    }
-
-    .video-placeholder .vp-icon { font-size: 52px; opacity: 0.3; }
-
     /* Song list display shown between videos */
     #videoPlaceholder {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
       overflow-y: auto;
       padding: 28px 32px;
       background: #000;
+      z-index: 2;
     }
 
     .songlist-header {
@@ -344,15 +340,19 @@
     @media (max-width: 860px)  { .songlist-cols { columns: 1; } }
 
     .video-status {
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%;
       font-size: 12px;
       padding: 10px 20px;
       color: var(--muted);
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.85);
       border-top: 1px solid var(--border);
-      flex-shrink: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      z-index: 3;
+      height: 36px;
     }
     .video-status.found   { color: #4caf7d; }
     .video-status.missing { color: #ff8a65; }
@@ -361,8 +361,7 @@
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; height: auto; }
       .left-col { height: auto; overflow: visible; }
-      .right-col { height: 56vw; min-height: 260px; }
-      #playerWrap { position: relative; height: 100%; }
+      .right-col { height: 56vw; min-height: 300px; position: relative; }
     }
   </style>
 </head>
@@ -419,16 +418,14 @@
 
   <!-- RIGHT: BIG VIDEO -->
   <div class="right-col">
-    <div id="playerWrap">
-      <!-- Song list shown when no video is playing -->
-      <div id="videoPlaceholder">
-        <div class="songlist-display">
-          <div class="songlist-header">
-            <span class="songlist-title">Tonight's Setlist</span>
-            <span class="songlist-sub">Pick a song and sign up!</span>
-          </div>
-          <div class="songlist-cols" id="setlistCols"></div>
+    <div id="playerWrap"></div>
+    <div id="videoPlaceholder">
+      <div class="songlist-display">
+        <div class="songlist-header">
+          <span class="songlist-title">Tonight's Setlist</span>
+          <span class="songlist-sub">Pick a song and sign up!</span>
         </div>
+        <div class="songlist-cols" id="setlistCols"></div>
       </div>
     </div>
     <p class="video-status" id="videoStatus"></p>
