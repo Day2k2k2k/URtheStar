@@ -444,6 +444,7 @@
   let playlistVideos = [];  // [{videoId, title}]
   let pendingSong    = null;
   let playerCreated  = false;
+  let intentionalPlay = false; // true only when band presses Next Singer
 
   // ── Full song list for the setlist display ──
   const ALL_SONGS = [
@@ -551,8 +552,9 @@
           showSetlist();
         },
         onStateChange: function(e) {
-          // YT.PlayerState: ENDED=0, PLAYING=1, PAUSED=2, BUFFERING=3, CUED=5
+          if (!intentionalPlay) return;
           if (e.data === YT.PlayerState.ENDED) {
+            intentionalPlay = false;
             showSetlist();
             setStatus('', '');
           } else if (e.data === YT.PlayerState.PLAYING) {
@@ -644,10 +646,12 @@
     }
     const match = findBestMatch(songName);
     if (match) {
+      intentionalPlay = true;
       hideSetlist();
       ytPlayer.loadVideoById(match.video.videoId);
       setStatus('▶ ' + match.video.title, 'found');
     } else {
+      intentionalPlay = true;
       setStatus(`No match for "${songName}" — cuing playlist`, 'missing');
       hideSetlist();
       ytPlayer.loadPlaylist({ listType: 'playlist', list: PLAYLIST_ID, index: 0 });
