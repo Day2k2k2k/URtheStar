@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ur The Star Karaoke Band</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    header {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)),
+                  url('https://images.unsplash.com/photo-1506157786151-b8491531f063') center/cover;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+
+    .btn {
+      background: #ff0055;
+      padding: 12px 24px;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    section {
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .video iframe {
+      width: 100%;
+      max-width: 800px;
+      height: 450px;
+    }
+
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .step {
+      background: #1a1a1a;
+      padding: 20px;
+      width: 250px;
+      border-radius: 10px;
+    }
+
+    footer {
+      padding: 40px;
+      text-align: center;
+      background: #000;
+    }
+
+    input, textarea {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 10px auto;
+      display: block;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #ff0055;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>UR THE STAR</h1>
+    <p>You sing. We play. The crowd goes wild.</p>
+    <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+  <a href="#booking" class="btn">Book the Band</a>
+  <a href="songs.html" class="btn" style="background:#00c2ff;">Pick a Song</a>
+</div>
+  </div>
+</header>
+
+<section>
+  <h2>What is it?</h2>
+  <p>
+    A live karaoke band experience where YOU become the lead singer.
+    Pick a song, grab the mic, and perform with a real band behind you.
+  </p>
+</section>
+
+<section class="video">
+  <h2>See It In Action</h2>
+  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+</section>
+
+<section>
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step">
+      <h3>1. Choose a Song</h3>
+      <p>Pick your favourite track from our setlist.</p>
+    </div>
+    <div class="step">
+      <h3>2. Take the Stage</h3>
+      <p>Step up and grab the mic.</p>
+    </div>
+    <div class="step">
+      <h3>3. Be the Star</h3>
+      <p>Perform with a live band backing you.</p>
+    </div>
+  </div>
+</section>
+
+<section id="booking">
+  <h2>Book the Band</h2>
+  <form>
+    <input type="text" placeholder="Your Name" required>
+    <input type="email" placeholder="Your Email" required>
+    <textarea placeholder="Tell us about your event"></textarea>
+    <button type="submit">Send</button>
+  </form>
+</section>
+
+<footer>
+  <p>© Ur The Star Karaoke Band</p>
+</footer>
+
+</body>
+</html>

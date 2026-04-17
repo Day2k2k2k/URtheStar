@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pick a Song - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #ff0055;
+      --cyan: #00c2ff;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 28px 32px 24px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff 40%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+
+    /* ─── SONG LIST VIEW ─── */
+    #songView {
+      display: flex;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px;
+      gap: 28px;
+    }
+
+    .sidebar {
+      width: 180px;
+      flex-shrink: 0;
+    }
+
+    .sidebar h3 {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    #genreList {
+      list-style: none;
+    }
+
+    #genreList li {
+      padding: 9px 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--muted);
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+
+    #genreList li:hover { background: var(--surface2); color: #fff; }
+    #genreList li.active { background: var(--surface2); color: var(--cyan); font-weight: 600; }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .search-wrap {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    #search {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #search:focus { border-color: var(--cyan); }
+    #search::placeholder { color: var(--muted); }
+
+    .song-count {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    #songList {
+      list-style: none;
+    }
+
+    #songList li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+      padding: 13px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.15s;
+    }
+
+    #songList li:hover {
+      background: var(--surface2);
+      border-color: rgba(0,194,255,0.3);
+      transform: translateX(3px);
+    }
+
+    .song-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .song-genre {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.07);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      flex-shrink: 0;
+    }
+
+    .sing-arrow {
+      color: var(--cyan);
+      opacity: 0;
+      font-size: 18px;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    #songList li:hover .sing-arrow { opacity: 1; }
+
+    /* ─── SING FORM VIEW ─── */
+    #formView {
+      display: none;
+      max-width: 560px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 40px 40px;
+    }
+
+    .form-badge {
+      display: inline-block;
+      background: rgba(0,194,255,0.12);
+      color: var(--cyan);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .selected-song-display {
+      background: var(--surface2);
+      border: 1px solid rgba(0,194,255,0.25);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+
+    .selected-song-display .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .selected-song-display .song-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: var(--cyan); }
+    .form-group input::placeholder { color: rgba(255,255,255,0.2); }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sing {
+      flex: 1;
+      padding: 14px 24px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .btn-sing:hover { background: #ff2270; transform: translateY(-1px); }
+    .btn-sing:active { transform: translateY(0); }
+
+    .btn-back {
+      padding: 14px 22px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-back:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+
+    /* ─── SUCCESS VIEW ─── */
+    #successView {
+      display: none;
+      max-width: 500px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(0,194,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 32px;
+    }
+
+    #successView h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    #successView p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .success-song {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: var(--cyan);
+      letter-spacing: 1px;
+    }
+
+    .btn-another {
+      display: inline-block;
+      padding: 13px 28px;
+      background: transparent;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-another:hover { border-color: rgba(255,255,255,0.3); background: var(--surface); }
+
+    /* No results */
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 15px;
+      display: none;
+    }
+
+    #songList li.song-used {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    #songList li.song-used .song-name::after {
+      content: ' — taken tonight';
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 650px) {
+      #songView { flex-direction: column; }
+      .sidebar { width: 100%; }
+      #genreList { display: flex; flex-wrap: wrap; gap: 8px; }
+      #genreList li { padding: 7px 14px; }
+      .form-card { padding: 28px 24px 32px; }
+      .form-actions { flex-direction: column-reverse; }
+      .btn-sing { flex: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">UR THE STAR</span>
+  <a href="index.html" class="back-link">← Back to Home</a>
+</header>
+
+<!-- ═══ SONG LIST ═══ -->
+<div id="songView">
+  <div class="sidebar">
+    <h3>Genre</h3>
+    <ul id="genreList">
+      <li data-genre="all" class="active">All</li>
+      <li data-genre="rock">Rock</li>
+      <li data-genre="indie">Indie</li>
+      <li data-genre="pop">Pop</li>
+      <li data-genre="classic">Classics</li>
+      <li data-genre="party">Party</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search" placeholder="Search songs or artists...">
+    </div>
+    <p class="song-count" id="songCount"></p>
+    <p class="no-results" id="noResults">No songs found. Try a different search.</p>
+    <ul id="songList">
+      <li data-genre="party">A Bar Song (Tipsy) – Shaboozey</li>
+      <li data-genre="classic">Achy Breaky Heart – Billy Ray Cyrus</li>
+      <li data-genre="classic">Addicted to Love – Robert Palmer</li>
+      <li data-genre="classic">A Hard Day's Night – The Beatles</li>
+      <li data-genre="rock">All Along the Watchtower – Jimi Hendrix</li>
+      <li data-genre="classic">All Or Nothing – Small Faces</li>
+      <li data-genre="pop">All the Small Things – Blink 182</li>
+      <li data-genre="party">Angels – Robbie Williams</li>
+      <li data-genre="rock">Another One Bites the Dust – Queen</li>
+      <li data-genre="rock">Back In Black – AC/DC</li>
+      <li data-genre="classic">Bad Moon Rising – Creedence Clearwater Revival</li>
+      <li data-genre="indie">Bet You Look Good On The Dancefloor – Arctic Monkeys</li>
+      <li data-genre="pop">Billie Jean – Michael Jackson</li>
+      <li data-genre="indie">Bittersweet Symphony – The Verve</li>
+      <li data-genre="rock">Blvd. of Broken Dreams – Green Day</li>
+      <li data-genre="classic">Burning Love – Elvis Presley</li>
+      <li data-genre="rock">Can't Explain – The Who</li>
+      <li data-genre="pop">Careless Whisper – George Michael</li>
+      <li data-genre="indie">Chasing Cars – Snow Patrol</li>
+      <li data-genre="pop">Clocks – Coldplay</li>
+      <li data-genre="rock">Come As You Are – Nirvana</li>
+      <li data-genre="rock">Crazy Little Thing Called Love – Queen</li>
+      <li data-genre="indie">Creep – Radiohead</li>
+      <li data-genre="indie">Dakota – Stereophonics</li>
+      <li data-genre="classic">Dancing in the Dark – Bruce Springsteen</li>
+      <li data-genre="party">Dancing Queen – ABBA</li>
+      <li data-genre="party">Don't Stop Believin' – Journey</li>
+      <li data-genre="pop">Don't You Want Me – The Human League</li>
+      <li data-genre="classic">Dreams – Fleetwood Mac</li>
+      <li data-genre="classic">Everybody Wants to Rule the World – Tears for Fears</li>
+      <li data-genre="rock">Eye of the Tiger – Survivor</li>
+      <li data-genre="pop">Faith – George Michael</li>
+      <li data-genre="rock">Fly Away – Lenny Kravitz</li>
+      <li data-genre="indie">Friday I'm in Love – The Cure</li>
+      <li data-genre="party">Gay Bar – Electric Six</li>
+      <li data-genre="party">Get Lucky – Daft Punk ft. Pharrell Williams</li>
+      <li data-genre="classic">Ghost Town – The Specials</li>
+      <li data-genre="party">Girls Just Want to Have Fun – Cyndi Lauper</li>
+      <li data-genre="classic">Good Riddance – Green Day</li>
+      <li data-genre="party">Happy Birthday</li>
+      <li data-genre="classic">Hard to Handle – Otis Redding</li>
+      <li data-genre="classic">Help – The Beatles</li>
+      <li data-genre="pop">Hit Me Baby One More Time – Britney Spears</li>
+      <li data-genre="classic">Hound Dog – Elvis Presley</li>
+      <li data-genre="rock">Hush – Deep Purple</li>
+      <li data-genre="classic">I Can't Help Falling in Love – Elvis Presley</li>
+      <li data-genre="party">I'm A Believer – The Monkees</li>
+      <li data-genre="party">I'm Gonna Be (500 Miles) – The Proclaimers</li>
+      <li data-genre="pop">I'm Still Standing – Elton John</li>
+      <li data-genre="rock">In the Air Tonight – Phil Collins</li>
+      <li data-genre="pop">Ironic – Alanis Morissette</li>
+      <li data-genre="party">It's Raining Men – The Weather Girls</li>
+      <li data-genre="party">I Will Survive – Gloria Gaynor</li>
+      <li data-genre="rock">Jumping Jack Flash – The Rolling Stones</li>
+      <li data-genre="pop">Just Like a Pill – Pink</li>
+      <li data-genre="party">Karma Chameleon – Culture Club</li>
+      <li data-genre="classic">Let's Dance – David Bowie</li>
+      <li data-genre="rock">Light My Fire – The Doors</li>
+      <li data-genre="pop">Like A Virgin – Madonna</li>
+      <li data-genre="indie">Linger – The Cranberries</li>
+      <li data-genre="rock">Livin' On A Prayer – Bon Jovi</li>
+      <li data-genre="rock">Lonely Boy – The Black Keys</li>
+      <li data-genre="pop">Love Machine – Girls Aloud</li>
+      <li data-genre="party">Love Shack – The B-52's</li>
+      <li data-genre="classic">Maggie May – Rod Stewart</li>
+      <li data-genre="classic">Message to Rudy – The Specials</li>
+      <li data-genre="rock">Molly's Chambers – Kings of Leon</li>
+      <li data-genre="rock">Money For Nothing – Dire Straits</li>
+      <li data-genre="indie">Mr. Brightside – The Killers</li>
+      <li data-genre="indie">Mr. Jones – Counting Crows</li>
+      <li data-genre="classic">Mustang Sally – Wilson Pickett</li>
+      <li data-genre="classic">Never Tear Us Apart – INXS</li>
+      <li data-genre="pop">Nothing Compares 2 U – Sinéad O'Connor</li>
+      <li data-genre="rock">Paranoid – Black Sabbath</li>
+      <li data-genre="indie">Parklife – Blur</li>
+      <li data-genre="classic">Purple Rain – Prince and The Revolution</li>
+      <li data-genre="rock">R U Gonna Be My Girl – Jet</li>
+      <li data-genre="rock">Red Morning Light – Kings of Leon</li>
+      <li data-genre="indie">Rock N Roll Star – Oasis</li>
+      <li data-genre="rock">Rocks – Primal Scream</li>
+      <li data-genre="rock">Seven Nation Army – The White Stripes</li>
+      <li data-genre="pop">Shake It Off – Taylor Swift</li>
+      <li data-genre="rock">Should I Stay or Should I Go – The Clash</li>
+      <li data-genre="party">Shout – Tears for Fears</li>
+      <li data-genre="party">Simply the Best – Tina Turner</li>
+      <li data-genre="pop">Sk8er Boi – Avril Lavigne</li>
+      <li data-genre="pop">A Sky Full of Stars – Coldplay</li>
+      <li data-genre="pop">Slow Hands – Niall Horan</li>
+      <li data-genre="rock">Smoke on the Water – Deep Purple</li>
+      <li data-genre="indie">Song 2 – Blur</li>
+      <li data-genre="party">Stayin' Alive – Bee Gees</li>
+      <li data-genre="rock">Summer of '69 – Bryan Adams</li>
+      <li data-genre="pop">Sunflower – Post Malone & Swae Lee</li>
+      <li data-genre="indie">Supersonic – Oasis</li>
+      <li data-genre="party">Sweet Caroline – Neil Diamond</li>
+      <li data-genre="pop">Sweet Dreams – Eurythmics</li>
+      <li data-genre="pop">Take On Me – a-ha</li>
+      <li data-genre="indie">Teenage Kicks – The Undertones</li>
+      <li data-genre="party">Tequila – The Champs</li>
+      <li data-genre="pop">Thank U – Alanis Morissette</li>
+      <li data-genre="indie">The One I Love – R.E.M.</li>
+      <li data-genre="party">The One and Only – Chesney Hawkes</li>
+      <li data-genre="rock">The Seeker – The Who</li>
+      <li data-genre="rock">Twentieth Century Boy – T. Rex</li>
+      <li data-genre="classic">Twist and Shout – The Beatles</li>
+      <li data-genre="party">Uptown Funk – Mark Ronson ft. Bruno Mars</li>
+      <li data-genre="party">Valerie – Zutons / Amy Winehouse</li>
+      <li data-genre="party">Walk Like an Egyptian – The Bangles</li>
+      <li data-genre="party">Walking On Sunshine – Katrina and The Waves</li>
+      <li data-genre="rock">Walking on the Moon – The Police</li>
+      <li data-genre="pop">Watermelon Sugar – Harry Styles</li>
+      <li data-genre="pop">We Are Never Getting Back Together – Taylor Swift</li>
+      <li data-genre="classic">Weather With You – Crowded House</li>
+      <li data-genre="pop">West End Girls – Pet Shop Boys</li>
+      <li data-genre="indie">When the Sun Goes Down – Arctic Monkeys</li>
+      <li data-genre="indie">Where Is My Mind? – Pixies</li>
+      <li data-genre="rock">White Wedding – Billy Idol</li>
+      <li data-genre="rock">Whole Lotta Love – Led Zeppelin</li>
+      <li data-genre="classic">Wicked Game – Chris Isaak</li>
+      <li data-genre="rock">With or Without You – U2</li>
+      <li data-genre="indie">Wonderwall – Oasis</li>
+      <li data-genre="pop">Wrecking Ball – Miley Cyrus</li>
+      <li data-genre="party">YMCA – Village People</li>
+      <li data-genre="rock">Zombie – The Cranberries</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ SING FORM ═══ -->
+<div id="formView">
+  <div class="form-card">
+    <span class="form-badge">You're up next</span>
+    <div class="selected-song-display">
+      <div class="label">Your chosen song</div>
+      <div class="song-title" id="chosenSongDisplay">Song Title Here</div>
+    </div>
+
+    <div class="form-group">
+      <label for="singerName">Singer name(s)</label>
+      <input type="text" id="singerName" placeholder="e.g. Sarah, or Sarah & Dave">
+      <p class="hint">Add everyone who's hitting the stage</p>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-back" id="backBtn">← Back to song list</button>
+      <button class="btn-sing" id="singBtn">🎤 Sing It!</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUCCESS ═══ -->
+<div id="successView">
+  <div class="success-icon">🎤</div>
+  <h2>You're on the list!</h2>
+  <p>Get ready — the band will call <strong id="successName"></strong> up shortly for</p>
+  <p class="success-song" id="successSong"></p>
+  <br>
+  <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <button class="btn-another" id="anotherBtn">Add another song</button>
+    <button class="btn-another" id="seeListBtn" style="color:var(--cyan); border-color:rgba(0,194,255,0.3);">See tonight's singers →</button>
+  </div>
+</div>
+
+<script>
+  const search = document.getElementById('search');
+  const songs = document.querySelectorAll('#songList li');
+  const genres = document.querySelectorAll('#genreList li');
+  const songCount = document.getElementById('songCount');
+  const noResults = document.getElementById('noResults');
+
+  const songView = document.getElementById('songView');
+  const formView = document.getElementById('formView');
+  const successView = document.getElementById('successView');
+
+  const QUEUE_KEY = 'urthestar_queue';
+  const DATE_KEY = 'urthestar_queue_date';
+  const USED_KEY = 'urthestar_used_songs';
+  const USED_DATE_KEY = 'urthestar_used_songs_date';
+
+  let currentGenre = 'all';
+  let selectedSong = '';
+
+  function todayStr() { return new Date().toDateString(); }
+
+  function getUsedSongs() {
+    try {
+      const savedDate = localStorage.getItem(USED_DATE_KEY);
+      if (savedDate !== todayStr()) {
+        localStorage.setItem(USED_KEY, JSON.stringify([]));
+        localStorage.setItem(USED_DATE_KEY, todayStr());
+        return [];
+      }
+      return JSON.parse(localStorage.getItem(USED_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function markSongUsed(songName) {
+    const used = getUsedSongs();
+    if (!used.includes(songName)) {
+      used.push(songName);
+      localStorage.setItem(USED_KEY, JSON.stringify(used));
+      localStorage.setItem(USED_DATE_KEY, todayStr());
+    }
+  }
+
+  // ── render song items with genre badge + arrow ──
+  songs.forEach(li => {
+    const text = li.textContent.trim();
+    const genre = li.dataset.genre;
+    li.innerHTML = `
+      <span class="song-name">${text}</span>
+      <span class="song-genre">${genre}</span>
+      <span class="sing-arrow">›</span>
+    `;
+    li.addEventListener('click', () => {
+      if (li.classList.contains('song-used')) return;
+      openForm(text);
+    });
+  });
+
+  function applyUsedSongs() {
+    const used = getUsedSongs();
+    songs.forEach(li => {
+      const name = li.querySelector('.song-name').textContent;
+      if (used.includes(name)) {
+        li.classList.add('song-used');
+        li.title = 'Already chosen tonight';
+      } else {
+        li.classList.remove('song-used');
+        li.title = '';
+      }
+    });
+  }
+
+  function countVisible() {
+    const visible = [...songs].filter(s => s.style.display !== 'none').length;
+    songCount.textContent = `${visible} song${visible !== 1 ? 's' : ''}`;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  function filterSongs() {
+    const term = search.value.toLowerCase();
+    songs.forEach(song => {
+      const matchesSearch = song.textContent.toLowerCase().includes(term);
+      const matchesGenre = currentGenre === 'all' || song.dataset.genre === currentGenre;
+      song.style.display = (matchesSearch && matchesGenre) ? 'flex' : 'none';
+    });
+    countVisible();
+  }
+
+  search.addEventListener('input', filterSongs);
+
+  genres.forEach(genre => {
+    genre.addEventListener('click', () => {
+      genres.forEach(g => g.classList.remove('active'));
+      genre.classList.add('active');
+      currentGenre = genre.dataset.genre;
+      filterSongs();
+    });
+  });
+
+  // ── views ──
+  function showView(view) {
+    songView.style.display = 'none';
+    formView.style.display = 'none';
+    successView.style.display = 'none';
+    view.style.display = view === songView ? 'flex' : 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (view === songView) applyUsedSongs();
+  }
+
+  function openForm(songName) {
+    selectedSong = songName;
+    document.getElementById('chosenSongDisplay').textContent = songName;
+    document.getElementById('singerName').value = '';
+    showView(formView);
+  }
+
+  document.getElementById('backBtn').addEventListener('click', () => showView(songView));
+
+  document.getElementById('singBtn').addEventListener('click', () => {
+    const name = document.getElementById('singerName').value.trim();
+    if (!name) {
+      document.getElementById('singerName').focus();
+      document.getElementById('singerName').style.borderColor = '#ff0055';
+      setTimeout(() => document.getElementById('singerName').style.borderColor = '', 1500);
+      return;
+    }
+
+    // reset queue if new day
+    const savedDate = localStorage.getItem(DATE_KEY);
+    if (savedDate !== todayStr()) {
+      localStorage.setItem(QUEUE_KEY, JSON.stringify([]));
+      localStorage.setItem(DATE_KEY, todayStr());
+    }
+
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch {}
+    queue.push({ name, song: selectedSong });
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    localStorage.setItem(DATE_KEY, todayStr());
+
+    markSongUsed(selectedSong);
+
+    document.getElementById('successName').textContent = name;
+    document.getElementById('successSong').textContent = selectedSong;
+    showView(successView);
+  });
+
+  document.getElementById('anotherBtn').addEventListener('click', () => showView(songView));
+  document.getElementById('seeListBtn').addEventListener('click', () => { window.location.href = 'queue.html'; });
+
+  // init
+  applyUsedSongs();
+  filterSongs();
+</script>
+</body>
+</html>

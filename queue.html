@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tonight's Singers - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #ff0055;
+      --cyan: #00c2ff;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 28px 32px 24px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff 40%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+
+    .page-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .page-title span {
+      color: var(--pink);
+    }
+
+    .singer-count {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      display: none;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      opacity: 0.4;
+    }
+
+    .empty-state h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* queue list */
+    #queueList {
+      list-style: none;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .queue-position {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      color: var(--muted);
+      min-width: 36px;
+      line-height: 1;
+    }
+
+    .queue-item:first-child .queue-position {
+      color: var(--pink);
+    }
+
+    .queue-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .queue-singer {
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-song {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .up-next-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--pink);
+      background: rgba(255,0,85,0.1);
+      border: 1px solid rgba(255,0,85,0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+
+
+    /* add song CTA */
+    .add-cta {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 28px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-add:hover { background: #ff2270; transform: translateY(-1px); }
+
+    /* clear button */
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-clear:hover { color: var(--pink); border-color: rgba(255,0,85,0.3); }
+
+    @media (max-width: 500px) {
+      .page-title { font-size: 2.2rem; }
+      .queue-item { padding: 14px 16px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">UR THE STAR</span>
+  <a href="index.html" class="back-link">← Back to Home</a>
+</header>
+
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tonight's<br><span>Singers</span></h1>
+      <p id="todayDate" style="font-size:14px; color:var(--muted); margin-top:8px; letter-spacing:0.5px;"></p>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="singer-count" id="singerCount">0 singers</span>
+      <button class="btn-clear" id="clearBtn">Clear all</button>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🎤</div>
+    <h3>No one's signed up yet</h3>
+    <p>Be the first to take the stage tonight!</p>
+    <a href="songs.html" class="btn-add">Pick a song</a>
+  </div>
+
+  <ul id="queueList"></ul>
+
+  <div class="add-cta" id="addCta" style="display:none;">
+    <a href="songs.html" class="btn-add">+ Add your name to the list</a>
+  </div>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'urthestar_queue';
+  const DATE_KEY = 'urthestar_queue_date';
+
+  function todayStr() {
+    return new Date().toDateString();
+  }
+
+  function resetIfNewDay() {
+    const saved = localStorage.getItem(DATE_KEY);
+    if (saved !== todayStr()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(DATE_KEY, todayStr());
+    }
+  }
+
+  function showDate() {
+    const d = new Date();
+    const formatted = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('todayDate').textContent = formatted;
+  }
+
+  function loadQueue() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveQueue(queue) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
+  }
+
+  function render() {
+    const queue = loadQueue();
+    const list = document.getElementById('queueList');
+    const empty = document.getElementById('emptyState');
+    const addCta = document.getElementById('addCta');
+    const count = document.getElementById('singerCount');
+
+    count.textContent = `${queue.length} singer${queue.length !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+
+    if (queue.length === 0) {
+      empty.style.display = 'block';
+      addCta.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    addCta.style.display = 'flex';
+
+    queue.forEach((entry, i) => {
+      const li = document.createElement('li');
+      li.className = 'queue-item';
+      li.innerHTML = `
+        <span class="queue-position">${i + 1}</span>
+        <div class="queue-info">
+          <div class="queue-singer">${escHtml(entry.name)}</div>
+          <div class="queue-song">🎵 ${escHtml(entry.song)}</div>
+        </div>
+        ${i === 0 ? '<span class="up-next-badge">Up next</span>' : ''}
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (confirm('Clear the entire singer list for tonight?')) {
+      saveQueue([]);
+      render();
+    }
+  });
+
+  resetIfNewDay();
+  showDate();
+  render();
+</script>
+</body>
+</html>
