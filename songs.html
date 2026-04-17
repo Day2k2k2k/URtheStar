@@ -9,8 +9,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --pink: #ff0055;
-      --cyan: #00c2ff;
+      --pink: #fc8600;
+      --cyan: #0bb0c3;
       --bg: #0a0a0a;
       --surface: #141414;
       --surface2: #1e1e1e;
@@ -718,7 +718,7 @@
     const name = document.getElementById('singerName').value.trim();
     if (!name) {
       document.getElementById('singerName').focus();
-      document.getElementById('singerName').style.borderColor = '#ff0055';
+      document.getElementById('singerName').style.borderColor = '#fc8600';
       setTimeout(() => document.getElementById('singerName').style.borderColor = '', 1500);
       return;
     }
