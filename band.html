@@ -353,6 +353,7 @@
         <div class="meta-row">
           <span class="pill" id="singerCount">0</span>
           <button class="btn-clear" id="clearBtn">Clear</button>
+          <button class="btn-clear" id="resetSongsBtn" style="color:var(--cyan); border-color:rgba(11,176,195,0.3);">↺ Reset Songs</button>
         </div>
       </div>
       <p class="pill" id="dateDisplay" style="margin-bottom:14px; display:inline-block;"></p>
@@ -607,6 +608,14 @@
     if (confirm('Clear the entire singer list for tonight?')) {
       saveQueue([]);
       render();
+    }
+  });
+
+  document.getElementById('resetSongsBtn').addEventListener('click', function() {
+    if (confirm('Reset all songs to available? This clears the used songs list for tonight.')) {
+      localStorage.removeItem('urthestar_used_songs');
+      localStorage.removeItem('urthestar_used_songs_date');
+      alert('All songs are now available again!');
     }
   });
 
