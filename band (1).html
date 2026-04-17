@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Band Control - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #fc8600;
+      --cyan: #0bb0c3;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 24px 32px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff 40%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .band-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: rgba(0,194,255,0.1);
+      border: 1px solid rgba(0,194,255,0.25);
+      padding: 5px 14px;
+      border-radius: 20px;
+    }
+
+    /* ── LAYOUT: sidebar left, big video right ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 0;
+      height: calc(100vh - 73px); /* fill below header */
+    }
+
+    /* ── LEFT SIDEBAR ── */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: #000;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* QR */
+    .qr-wrap {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .qr-url {
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    /* Now singing */
+    .now-singing-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .now-singing-song { font-size: 13px; color: var(--muted); }
+    .now-singing-song strong { color: var(--cyan); font-weight: 500; }
+
+    .empty-singer {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    /* Next Singer button */
+    .btn-next {
+      display: block;
+      width: calc(100% - 40px);
+      margin: 16px 20px;
+      padding: 16px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .btn-next:hover   { background: #e07800; transform: translateY(-1px); }
+    .btn-next:active  { transform: translateY(0); }
+    .btn-next:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    /* Queue list in sidebar */
+    .queue-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .queue-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+    }
+    .queue-title span { color: var(--pink); }
+
+    .meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .pill {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 3px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-clear:hover { color: var(--pink); border-color: rgba(255,0,85,0.3); }
+
+    #queueList { list-style: none; }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+    }
+
+    .queue-item.is-current {
+      border-color: rgba(255,0,85,0.35);
+      background: rgba(255,0,85,0.06);
+    }
+
+    .queue-position {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: var(--muted);
+      min-width: 26px;
+      line-height: 1;
+    }
+    .queue-item.is-current .queue-position { color: var(--pink); }
+
+    .queue-info { flex: 1; min-width: 0; }
+
+    .queue-singer {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-song {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .up-next-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pink);
+      background: rgba(255,0,85,0.1);
+      border: 1px solid rgba(255,0,85,0.2);
+      padding: 3px 8px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .empty-queue {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--muted);
+      font-size: 13px;
+      display: none;
+    }
+    .empty-queue .icon { font-size: 32px; margin-bottom: 10px; opacity: 0.4; }
+
+    /* ── RIGHT: BIG VIDEO ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #playerWrap {
+      flex: 1;
+      position: relative;
+      background: #000;
+    }
+
+    #playerWrap > * {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .video-placeholder .vp-icon { font-size: 52px; opacity: 0.3; }
+
+    /* Song list display shown between videos */
+    #videoPlaceholder {
+      overflow-y: auto;
+      padding: 28px 32px;
+      background: #000;
+    }
+
+    .songlist-header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    .songlist-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 3px;
+      color: var(--pink);
+      display: block;
+    }
+
+    .songlist-sub {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .songlist-cols {
+      columns: 3;
+      column-gap: 24px;
+    }
+
+    .songlist-entry {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      break-inside: avoid;
+      line-height: 1.4;
+    }
+
+    .songlist-entry.used {
+      color: rgba(255,255,255,0.2);
+      text-decoration: line-through;
+    }
+
+    @media (max-width: 1100px) { .songlist-cols { columns: 2; } }
+    @media (max-width: 860px)  { .songlist-cols { columns: 1; } }
+
+    .video-status {
+      font-size: 12px;
+      padding: 10px 20px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.6);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .video-status.found   { color: #4caf7d; }
+    .video-status.missing { color: #ff8a65; }
+    .video-status.loading { color: var(--cyan); }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; height: auto; }
+      .left-col { height: auto; overflow: visible; }
+      .right-col { height: 56vw; min-height: 260px; }
+      #playerWrap { position: relative; height: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">UR THE STAR</span>
+  <span class="band-badge">🎸 Band Control</span>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="left-col">
+
+    <!-- QR Code -->
+    <div class="sidebar-section">
+      <p class="card-label">Scan to pick a song</p>
+      <div class="qr-wrap">
+        <img src="UR_day2k2k.png" alt="QR code to song picker" style="width:180px; height:180px; display:block;">
+      </div>
+    </div>
+
+    <!-- Now Singing -->
+    <div class="sidebar-section" style="border-left: 3px solid var(--pink); padding-left: 17px;">
+      <p class="card-label" style="color:rgba(255,0,85,0.6);">Now singing</p>
+      <div id="nowSingingContent"><p class="empty-singer">No one yet</p></div>
+    </div>
+
+    <!-- Next Singer Button -->
+    <button class="btn-next" id="nextBtn" disabled>🎤 Next Singer</button>
+
+    <!-- Singer Queue -->
+    <div class="sidebar-section" style="flex:1; border-bottom:none;">
+      <div class="queue-header">
+        <h2 class="queue-title">Tonight's <span>Singers</span></h2>
+        <div class="meta-row">
+          <span class="pill" id="singerCount">0</span>
+          <button class="btn-clear" id="clearBtn">Clear</button>
+          <button class="btn-clear" id="resetSongsBtn" style="color:var(--cyan); border-color:rgba(11,176,195,0.3);">↺ Reset Songs</button>
+        </div>
+      </div>
+      <p class="pill" id="dateDisplay" style="margin-bottom:14px; display:inline-block;"></p>
+
+      <div class="empty-queue" id="emptyQueue">
+        <div class="icon">🎤</div>
+        <p>No singers yet.<br>Share the QR!</p>
+      </div>
+
+      <ul id="queueList"></ul>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: BIG VIDEO -->
+  <div class="right-col">
+    <div id="playerWrap">
+      <!-- Song list shown when no video is playing -->
+      <div id="videoPlaceholder">
+        <div class="songlist-display">
+          <div class="songlist-header">
+            <span class="songlist-title">Tonight's Setlist</span>
+            <span class="songlist-sub">Pick a song and sign up!</span>
+          </div>
+          <div class="songlist-cols" id="setlistCols"></div>
+        </div>
+      </div>
+    </div>
+    <p class="video-status" id="videoStatus"></p>
+  </div>
+
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  const STORAGE_KEY = 'urthestar_queue';
+  const DATE_KEY    = 'urthestar_queue_date';
+  const PLAYLIST_ID = 'PLk7xNbZfM1SgEY8PCqJ0mm-yOE5SGOAsq';
+
+  let ytPlayer       = null;
+  let ytReady        = false;
+  let playlistVideos = [];  // [{videoId, title}]
+  let pendingSong    = null;
+  let playerCreated  = false;
+
+  // ── Full song list for the setlist display ──
+  const ALL_SONGS = [
+    "A Bar Song (Tipsy) – Shaboozey","Achy Breaky Heart – Billy Ray Cyrus","Addicted to Love – Robert Palmer",
+    "A Hard Day's Night – The Beatles","All Along the Watchtower – Jimi Hendrix","All Or Nothing – Small Faces",
+    "All the Small Things – Blink 182","Angels – Robbie Williams","Another One Bites the Dust – Queen",
+    "Back In Black – AC/DC","Bad Moon Rising – Creedence Clearwater Revival","Bet You Look Good On The Dancefloor – Arctic Monkeys",
+    "Billie Jean – Michael Jackson","Bittersweet Symphony – The Verve","Blvd. of Broken Dreams – Green Day",
+    "Burning Love – Elvis Presley","Can't Explain – The Who","Careless Whisper – George Michael",
+    "Chasing Cars – Snow Patrol","Clocks – Coldplay","Come As You Are – Nirvana",
+    "Crazy Little Thing Called Love – Queen","Creep – Radiohead","Dakota – Stereophonics",
+    "Dancing in the Dark – Bruce Springsteen","Dancing Queen – ABBA","Don't Stop Believin' – Journey",
+    "Don't You Want Me – The Human League","Dreams – Fleetwood Mac","Everybody Wants to Rule the World – Tears for Fears",
+    "Eye of the Tiger – Survivor","Faith – George Michael","Fly Away – Lenny Kravitz",
+    "Friday I'm in Love – The Cure","Gay Bar – Electric Six","Get Lucky – Daft Punk ft. Pharrell Williams",
+    "Ghost Town – The Specials","Girls Just Want to Have Fun – Cyndi Lauper","Good Riddance – Green Day",
+    "Happy Birthday","Hard to Handle – Otis Redding","Help – The Beatles",
+    "Hit Me Baby One More Time – Britney Spears","Hound Dog – Elvis Presley","Hush – Deep Purple",
+    "I Can't Help Falling in Love – Elvis Presley","I'm A Believer – The Monkees","I'm Gonna Be (500 Miles) – The Proclaimers",
+    "I'm Still Standing – Elton John","In the Air Tonight – Phil Collins","Ironic – Alanis Morissette",
+    "It's Raining Men – The Weather Girls","I Will Survive – Gloria Gaynor","Jumping Jack Flash – The Rolling Stones",
+    "Just Like a Pill – Pink","Karma Chameleon – Culture Club","Kiss – Prince and The Revolution",
+    "Let's Dance – David Bowie","Light My Fire – The Doors","Like A Virgin – Madonna",
+    "Linger – The Cranberries","Livin' On A Prayer – Bon Jovi","Lonely Boy – The Black Keys",
+    "Love Machine – Girls Aloud","Love Shack – The B-52's","Maggie May – Rod Stewart",
+    "Message to Rudy – The Specials","Molly's Chambers – Kings of Leon","Money For Nothing – Dire Straits",
+    "Mr. Brightside – The Killers","Mr. Jones – Counting Crows","Mustang Sally – Wilson Pickett",
+    "Never Tear Us Apart – INXS","Nothing Compares 2 U – Sinéad O'Connor","Paranoid – Black Sabbath",
+    "Parklife – Blur","Purple Rain – Prince and The Revolution","R U Gonna Be My Girl – Jet",
+    "Red Morning Light – Kings of Leon","Rock N Roll Star – Oasis","Rocks – Primal Scream",
+    "Seven Nation Army – The White Stripes","Shake It Off – Taylor Swift","Should I Stay or Should I Go – The Clash",
+    "Shout – Tears for Fears","Simply the Best – Tina Turner","Sk8er Boi – Avril Lavigne",
+    "A Sky Full of Stars – Coldplay","Slow Hands – Niall Horan","Smoke on the Water – Deep Purple",
+    "Song 2 – Blur","Stayin' Alive – Bee Gees","Summer of '69 – Bryan Adams",
+    "Sunflower – Post Malone & Swae Lee","Supersonic – Oasis","Sweet Caroline – Neil Diamond",
+    "Sweet Dreams – Eurythmics","Take On Me – a-ha","Teenage Kicks – The Undertones",
+    "Tequila – The Champs","Thank U – Alanis Morissette","The One I Love – R.E.M.",
+    "The One and Only – Chesney Hawkes","The Seeker – The Who","Twentieth Century Boy – T. Rex",
+    "Twist and Shout – The Beatles","Uptown Funk – Mark Ronson ft. Bruno Mars","Valerie – Zutons / Amy Winehouse",
+    "Walk Like an Egyptian – The Bangles","Walking On Sunshine – Katrina and The Waves","Walking on the Moon – The Police",
+    "Watermelon Sugar – Harry Styles","We Are Never Getting Back Together – Taylor Swift","Weather With You – Crowded House",
+    "West End Girls – Pet Shop Boys","When the Sun Goes Down – Arctic Monkeys","Where Is My Mind? – Pixies",
+    "White Wedding – Billy Idol","Whole Lotta Love – Led Zeppelin","Wicked Game – Chris Isaak",
+    "With or Without You – U2","Wonderwall – Oasis","Wrecking Ball – Miley Cyrus",
+    "YMCA – Village People","Zombie – The Cranberries"
+  ];
+
+  function getUsedSongs() {
+    try {
+      const d = localStorage.getItem('urthestar_used_songs_date');
+      if (d !== todayStr()) return [];
+      return JSON.parse(localStorage.getItem('urthestar_used_songs')) || [];
+    } catch { return []; }
+  }
+
+  function renderSetlist() {
+    const used = getUsedSongs();
+    const cols = document.getElementById('setlistCols');
+    cols.innerHTML = ALL_SONGS.map(s => {
+      const isUsed = used.includes(s);
+      return `<div class="songlist-entry${isUsed ? ' used' : ''}">${s}</div>`;
+    }).join('');
+  }
+
+  function showSetlist() {
+    document.getElementById('videoPlaceholder').style.display = 'block';
+    renderSetlist();
+  }
+
+  function hideSetlist() {
+    document.getElementById('videoPlaceholder').style.display = 'none';
+  }
+
+  // ── YouTube API ready ──
+  window.onYouTubeIframeAPIReady = function() {
+    createPlayer();
+  };
+
+  function createPlayer() {
+    if (playerCreated) return;
+    playerCreated = true;
+
+    const el = document.createElement('div');
+    el.id = 'ytEl';
+    document.getElementById('playerWrap').appendChild(el);
+
+    ytPlayer = new YT.Player('ytEl', {
+      playerVars: {
+        listType: 'playlist',
+        list: PLAYLIST_ID,
+        autoplay: 0,
+        controls: 1,
+        rel: 0,
+        modestbranding: 1,
+        origin: window.location.origin
+      },
+      events: {
+        onReady: function() {
+          ytReady = true;
+          setStatus('Playlist ready — indexing tracks…', 'loading');
+          setTimeout(indexPlaylist, 2000);
+        },
+        onError: function(e) {
+          setStatus('Player error — check playlist is public', 'missing');
+          showSetlist();
+        },
+        onStateChange: function(e) {
+          // YT.PlayerState: ENDED=0, PLAYING=1, PAUSED=2, BUFFERING=3, CUED=5
+          if (e.data === YT.PlayerState.ENDED) {
+            showSetlist();
+            setStatus('', '');
+          } else if (e.data === YT.PlayerState.PLAYING) {
+            hideSetlist();
+          }
+        }
+      }
+    });
+  }
+
+  // ── Build title index by stepping through each video ──
+  function indexPlaylist() {
+    let ids;
+    try { ids = ytPlayer.getPlaylist(); } catch(e) { ids = null; }
+
+    if (!ids || ids.length === 0) {
+      setTimeout(indexPlaylist, 2000);
+      return;
+    }
+
+    setStatus(`Indexing ${ids.length} tracks…`, 'loading');
+    collectTitles(ids, 0, function() {
+      // Restore to start, no autoplay
+      ytPlayer.cuePlaylist({ listType: 'playlist', list: PLAYLIST_ID, index: 0 });
+      setStatus(`${playlistVideos.length} tracks indexed. Ready.`, 'found');
+      if (pendingSong) {
+        const s = pendingSong; pendingSong = null;
+        playVideoForSong(s);
+      }
+    });
+  }
+
+  function collectTitles(ids, i, done) {
+    if (i >= ids.length) { done(); return; }
+    ytPlayer.cueVideoById(ids[i]);
+    setTimeout(function() {
+      try {
+        const d = ytPlayer.getVideoData();
+        if (d && d.title && d.title !== '') {
+          playlistVideos.push({ videoId: ids[i], title: d.title });
+        }
+      } catch(e) {}
+      collectTitles(ids, i + 1, done);
+    }, 250);
+  }
+
+  // ── Matching ──
+  function normalize(s) {
+    return s.toLowerCase()
+      .replace(/[''`´]/g, "'")
+      .replace(/[^a-z0-9 ']/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function scoreMatch(songName, videoTitle) {
+    const sn = normalize(songName);
+    const vt = normalize(videoTitle);
+    if (vt === sn) return 100;
+    if (vt.includes(sn) || sn.includes(vt)) return 90;
+    // Strip artist part (everything after ' – ' or ' - ')
+    const trackOnly = normalize(songName.split(/\s[–—-]\s/)[0]);
+    if (trackOnly.length > 2 && vt.includes(trackOnly)) return 80;
+    // Word overlap
+    const words = sn.split(' ').filter(w => w.length > 2);
+    const vSet  = new Set(vt.split(' '));
+    const hits  = words.filter(w => vSet.has(w)).length;
+    return words.length ? Math.round((hits / words.length) * 65) : 0;
+  }
+
+  function findBestMatch(songName) {
+    let best = null, top = 0;
+    playlistVideos.forEach(v => {
+      const s = scoreMatch(songName, v.title);
+      if (s > top) { top = s; best = v; }
+    });
+    return top >= 40 ? { video: best, score: top } : null;
+  }
+
+  function playVideoForSong(songName) {
+    if (!ytReady) {
+      pendingSong = songName;
+      setStatus('Player loading…', 'loading');
+      return;
+    }
+    if (playlistVideos.length === 0) {
+      pendingSong = songName;
+      setStatus('Indexing playlist — will play shortly…', 'loading');
+      return;
+    }
+    const match = findBestMatch(songName);
+    if (match) {
+      hideSetlist();
+      ytPlayer.loadVideoById(match.video.videoId);
+      setStatus('▶ ' + match.video.title, 'found');
+    } else {
+      setStatus(`No match for "${songName}" — cuing playlist`, 'missing');
+      hideSetlist();
+      ytPlayer.loadPlaylist({ listType: 'playlist', list: PLAYLIST_ID, index: 0 });
+    }
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('videoStatus');
+    el.textContent = msg;
+    el.className = 'video-status' + (cls ? ' ' + cls : '');
+  }
+
+  // ── Queue logic ──
+  function todayStr() { return new Date().toDateString(); }
+
+  function resetIfNewDay() {
+    if (localStorage.getItem(DATE_KEY) !== todayStr()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(DATE_KEY, todayStr());
+    }
+  }
+
+  function loadQueue() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveQueue(q) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(q));
+    localStorage.setItem(DATE_KEY, todayStr());
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    const queue   = loadQueue();
+    const list    = document.getElementById('queueList');
+    const empty   = document.getElementById('emptyQueue');
+    const count   = document.getElementById('singerCount');
+    const nextBtn = document.getElementById('nextBtn');
+    const nowDiv  = document.getElementById('nowSingingContent');
+
+    count.textContent = `${queue.length} singer${queue.length !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+
+    if (queue.length === 0) {
+      empty.style.display = 'block';
+      nextBtn.disabled = true;
+      nowDiv.innerHTML = '<p class="empty-singer">No one yet</p>';
+      return;
+    }
+
+    empty.style.display = 'none';
+    nextBtn.disabled = false;
+
+    const cur = queue[0];
+    nowDiv.innerHTML = `
+      <div class="now-singing-name">${esc(cur.name)}</div>
+      <div class="now-singing-song">🎵 <strong>${esc(cur.song)}</strong></div>
+    `;
+
+    queue.forEach((entry, i) => {
+      const li = document.createElement('li');
+      li.className = 'queue-item' + (i === 0 ? ' is-current' : '');
+      li.innerHTML = `
+        <span class="queue-position">${i + 1}</span>
+        <div class="queue-info">
+          <div class="queue-singer">${esc(entry.name)}</div>
+          <div class="queue-song">🎵 ${esc(entry.song)}</div>
+        </div>
+        ${i === 0 ? '<span class="up-next-badge">Up next</span>' : ''}
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', function() {
+    const queue = loadQueue();
+    if (!queue.length) return;
+    const singer = queue.shift();
+    saveQueue(queue);
+    render();
+    playVideoForSong(singer.song);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    if (confirm('Clear the entire singer list for tonight?')) {
+      saveQueue([]);
+      render();
+    }
+  });
+
+  document.getElementById('resetSongsBtn').addEventListener('click', function() {
+    if (confirm('Reset all songs to available? This clears the used songs list for tonight.')) {
+      localStorage.removeItem('urthestar_used_songs');
+      localStorage.removeItem('urthestar_used_songs_date');
+      showSetlist();
+      alert('All songs are now available again!');
+    }
+  });
+
+
+
+  function showDate() {
+    document.getElementById('dateDisplay').textContent =
+      new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  setInterval(render, 5000);
+  resetIfNewDay();
+  showDate();
+  showSetlist();
+  render();
+</script>
+</body>
+</html>
