@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Song Admin - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink: #fc8600;
+      --cyan: #0bb0c3;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    header {
+      padding: 20px 32px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .back-link { color: var(--muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .back-link:hover { color: var(--cyan); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 24px 60px;
+    }
+
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      color: var(--pink);
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 7px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--cyan); }
+    .form-group input::placeholder { color: rgba(255,255,255,0.2); }
+    .form-group select option { background: var(--surface2); }
+
+    .btn-add {
+      width: 100%;
+      padding: 13px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-add:hover { background: #e07800; transform: translateY(-1px); }
+    .btn-add:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .status-msg {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+    .status-msg.ok   { color: #4caf7d; }
+    .status-msg.err  { color: #e05555; }
+    .status-msg.info { color: var(--cyan); }
+
+    .sheet-link {
+      display: block;
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .sheet-link:hover { color: var(--cyan); }
+
+    /* Right col */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .list-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; }
+    .list-title span { color: var(--pink); }
+
+    .pill {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 5px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .btn-refresh {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-refresh:hover { color: var(--cyan); border-color: var(--cyan); }
+
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.3; pointer-events: none; }
+    #adminSearch {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #adminSearch:focus { border-color: var(--cyan); }
+    #adminSearch::placeholder { color: var(--muted); }
+
+    .genre-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .genre-tab {
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .genre-tab:hover { color: #fff; background: var(--surface2); }
+    .genre-tab.active { background: var(--surface2); color: var(--cyan); border-color: var(--cyan); }
+
+    #songAdminList { list-style: none; }
+
+    .admin-song-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 16px;
+      margin-bottom: 6px;
+    }
+
+    .admin-song-info { flex: 1; min-width: 0; }
+    .admin-song-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-song-name .song-title { color: #fff; }
+    .admin-song-name .song-artist { color: var(--cyan); font-weight: 400; }
+
+    .genre-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(252,134,0,0.15);
+      color: var(--pink);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      flex-shrink: 0;
+    }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover { color: #e05555; }
+
+    .loading { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+    .no-results { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; display: none; }
+
+    @media (max-width: 750px) {
+      .layout { grid-template-columns: 1fr; }
+      .form-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:52px; width:auto; display:block;">
+  <a href="band.html" class="back-link">← Band Page</a>
+</header>
+
+<div class="layout">
+
+  <!-- ADD SONG -->
+  <div class="form-card">
+    <p class="card-title">Add a Song</p>
+    <div class="form-group">
+      <label for="newTitle">Song Title</label>
+      <input type="text" id="newTitle" placeholder="e.g. Mr. Brightside">
+    </div>
+    <div class="form-group">
+      <label for="newArtist">Artist</label>
+      <input type="text" id="newArtist" placeholder="e.g. The Killers">
+    </div>
+    <div class="form-group">
+      <label for="newGenre">Genre</label>
+      <select id="newGenre">
+        <option value="rock">Rock</option>
+        <option value="indie">Indie</option>
+        <option value="pop">Pop</option>
+        <option value="classic">Classics</option>
+        <option value="party">Party</option>
+      </select>
+    </div>
+    <button class="btn-add" id="addBtn">+ Add to Setlist</button>
+    <p class="status-msg" id="statusMsg"></p>
+    <a href="https://docs.google.com/spreadsheets/d/1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg/edit" target="_blank" class="sheet-link">✏️ Edit sheet directly in Google Sheets →</a>
+  </div>
+
+  <!-- SONG LIST -->
+  <div>
+    <div class="list-header">
+      <h2 class="list-title">The <span>Setlist</span></h2>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span class="pill" id="songCount">Loading…</span>
+        <button class="btn-refresh" id="refreshBtn">↺ Refresh</button>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="adminSearch" placeholder="Search songs...">
+    </div>
+
+    <div class="genre-tabs" id="genreTabs">
+      <button class="genre-tab active" data-genre="all">All</button>
+      <button class="genre-tab" data-genre="rock">Rock</button>
+      <button class="genre-tab" data-genre="indie">Indie</button>
+      <button class="genre-tab" data-genre="pop">Pop</button>
+      <button class="genre-tab" data-genre="classic">Classics</button>
+      <button class="genre-tab" data-genre="party">Party</button>
+    </div>
+
+    <p class="no-results" id="noResults">No songs match.</p>
+    <div id="listWrap"><div class="loading">Loading songs from Google Sheets…</div></div>
+  </div>
+
+</div>
+
+<script>
+  const SHEET_ID  = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
+  const API_KEY   = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
+  const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+  const APPEND_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1:append?valueInputOption=RAW&key=${API_KEY}`;
+
+  let allSongs = [];
+  let currentGenre = 'all';
+
+  // ── Load songs from sheet ──
+  async function loadSongs() {
+    try {
+      const res  = await fetch(SHEET_URL);
+      const data = await res.json();
+      const rows = data.values || [];
+      // Skip header row, build objects
+      allSongs = rows.slice(1).map((r, i) => ({
+        row: i + 2, // 1-indexed, +1 for header
+        title:  r[0] || '',
+        artist: r[1] || '',
+        genre:  (r[2] || 'rock').toLowerCase()
+      })).filter(s => s.title);
+      renderList();
+    } catch(e) {
+      document.getElementById('listWrap').innerHTML = `<p style="color:#e05555; text-align:center; padding:30px;">Could not load sheet. Check your API key and sheet permissions.</p>`;
+    }
+  }
+
+  // ── Render list ──
+  function renderList() {
+    const term    = document.getElementById('adminSearch').value.toLowerCase();
+    const wrap    = document.getElementById('listWrap');
+    const noRes   = document.getElementById('noResults');
+    const count   = document.getElementById('songCount');
+
+    const filtered = allSongs.filter(s => {
+      const matchGenre  = currentGenre === 'all' || s.genre === currentGenre;
+      const matchSearch = !term || (s.title + ' ' + s.artist).toLowerCase().includes(term);
+      return matchGenre && matchSearch;
+    });
+
+    count.textContent = `${allSongs.length} song${allSongs.length !== 1 ? 's' : ''}`;
+    wrap.innerHTML = '';
+    noRes.style.display = filtered.length === 0 ? 'block' : 'none';
+
+    const ul = document.createElement('ul');
+    ul.id = 'songAdminList';
+    filtered.forEach(song => {
+      const li = document.createElement('li');
+      li.className = 'admin-song-item';
+      li.innerHTML = `
+        <div class="admin-song-info">
+          <div class="admin-song-name">
+            <span class="song-title">${esc(song.title)}</span>
+            ${song.artist ? `<span class="song-artist"> – ${esc(song.artist)}</span>` : ''}
+          </div>
+        </div>
+        <span class="genre-badge">${esc(song.genre)}</span>
+        <button class="btn-remove" data-row="${song.row}" title="Remove">✕</button>
+      `;
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+
+    // Remove buttons
+    ul.querySelectorAll('.btn-remove').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        if (!confirm('Remove this song from the setlist?')) return;
+        await deleteSong(parseInt(this.dataset.row));
+      });
+    });
+  }
+
+  // ── Add song ──
+  document.getElementById('addBtn').addEventListener('click', async function() {
+    const title  = document.getElementById('newTitle').value.trim();
+    const artist = document.getElementById('newArtist').value.trim();
+    const genre  = document.getElementById('newGenre').value;
+
+    if (!title) {
+      document.getElementById('newTitle').style.borderColor = 'var(--pink)';
+      setTimeout(() => document.getElementById('newTitle').style.borderColor = '', 1500);
+      return;
+    }
+
+    setStatus('Adding…', 'info');
+    this.disabled = true;
+
+    try {
+      const res = await fetch(APPEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[title, artist, genre]] })
+      });
+
+      if (res.ok) {
+        setStatus(`✓ "${title}" added!`, 'ok');
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newArtist').value = '';
+        await loadSongs();
+      } else {
+        const err = await res.json();
+        setStatus('Error: ' + (err.error?.message || 'Could not add song'), 'err');
+      }
+    } catch(e) {
+      setStatus('Network error — check connection', 'err');
+    }
+
+    this.disabled = false;
+  });
+
+  // ── Delete song (clear row) ──
+  async function deleteSong(rowNum) {
+    const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A${rowNum}:C${rowNum}:clear?key=${API_KEY}`;
+    try {
+      const res = await fetch(clearUrl, { method: 'POST' });
+      if (res.ok) {
+        setStatus('Song removed.', 'ok');
+        await loadSongs();
+      } else {
+        setStatus('Could not remove — try editing sheet directly.', 'err');
+      }
+    } catch(e) {
+      setStatus('Network error.', 'err');
+    }
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + cls;
+    if (cls === 'ok') setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Genre tabs
+  document.getElementById('genreTabs').addEventListener('click', function(e) {
+    if (!e.target.classList.contains('genre-tab')) return;
+    document.querySelectorAll('.genre-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    currentGenre = e.target.dataset.genre;
+    renderList();
+  });
+
+  document.getElementById('adminSearch').addEventListener('input', renderList);
+  document.getElementById('refreshBtn').addEventListener('click', loadSongs);
+
+  // Enter key on inputs
+  ['newTitle','newArtist'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('addBtn').click();
+    });
+  });
+
+  loadSongs();
+</script>
+</body>
+</html>
