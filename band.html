@@ -580,51 +580,29 @@
   let localFiles    = {};   // { normalizedName: FileSystemFileHandle }
   let folderLoaded  = false;
 
-  // ── Full song list for the setlist display ──
-  const ALL_SONGS = [
-    "A Bar Song (Tipsy) – Shaboozey","Achy Breaky Heart – Billy Ray Cyrus","Addicted to Love – Robert Palmer",
-    "A Hard Day's Night – The Beatles","All Along the Watchtower – Jimi Hendrix","All Or Nothing – Small Faces",
-    "All the Small Things – Blink 182","Angels – Robbie Williams","Another One Bites the Dust – Queen",
-    "Back In Black – AC/DC","Bad Moon Rising – Creedence Clearwater Revival","Bet You Look Good On The Dancefloor – Arctic Monkeys",
-    "Billie Jean – Michael Jackson","Bittersweet Symphony – The Verve","Blvd. of Broken Dreams – Green Day",
-    "Burning Love – Elvis Presley","Can't Explain – The Who","Careless Whisper – George Michael",
-    "Chasing Cars – Snow Patrol","Clocks – Coldplay","Come As You Are – Nirvana",
-    "Crazy Little Thing Called Love – Queen","Creep – Radiohead","Dakota – Stereophonics",
-    "Dancing in the Dark – Bruce Springsteen","Dancing Queen – ABBA","Don't Stop Believin' – Journey",
-    "Don't You Want Me – The Human League","Dreams – Fleetwood Mac","Everybody Wants to Rule the World – Tears for Fears",
-    "Eye of the Tiger – Survivor","Faith – George Michael","Fly Away – Lenny Kravitz",
-    "Friday I'm in Love – The Cure","Gay Bar – Electric Six","Get Lucky – Daft Punk ft. Pharrell Williams",
-    "Ghost Town – The Specials","Girls Just Want to Have Fun – Cyndi Lauper","Good Riddance – Green Day",
-    "Happy Birthday","Hard to Handle – Otis Redding","Help – The Beatles",
-    "Hit Me Baby One More Time – Britney Spears","Hound Dog – Elvis Presley","Hush – Deep Purple",
-    "I Can't Help Falling in Love – Elvis Presley","I'm A Believer – The Monkees","I'm Gonna Be (500 Miles) – The Proclaimers",
-    "I'm Still Standing – Elton John","In the Air Tonight – Phil Collins","Ironic – Alanis Morissette",
-    "It's Raining Men – The Weather Girls","I Will Survive – Gloria Gaynor","Jumping Jack Flash – The Rolling Stones",
-    "Just Like a Pill – Pink","Karma Chameleon – Culture Club","Kiss – Prince and The Revolution",
-    "Let's Dance – David Bowie","Light My Fire – The Doors","Like A Virgin – Madonna",
-    "Linger – The Cranberries","Livin' On A Prayer – Bon Jovi","Lonely Boy – The Black Keys",
-    "Love Machine – Girls Aloud","Love Shack – The B-52's","Maggie May – Rod Stewart",
-    "Message to Rudy – The Specials","Molly's Chambers – Kings of Leon","Money For Nothing – Dire Straits",
-    "Mr. Brightside – The Killers","Mr. Jones – Counting Crows","Mustang Sally – Wilson Pickett",
-    "Never Tear Us Apart – INXS","Nothing Compares 2 U – Sinéad O'Connor","Paranoid – Black Sabbath",
-    "Parklife – Blur","Purple Rain – Prince and The Revolution","R U Gonna Be My Girl – Jet",
-    "Red Morning Light – Kings of Leon","Rock N Roll Star – Oasis","Rocks – Primal Scream",
-    "Seven Nation Army – The White Stripes","Shake It Off – Taylor Swift","Should I Stay or Should I Go – The Clash",
-    "Shout – Tears for Fears","Simply the Best – Tina Turner","Sk8er Boi – Avril Lavigne",
-    "A Sky Full of Stars – Coldplay","Slow Hands – Niall Horan","Smoke on the Water – Deep Purple",
-    "Song 2 – Blur","Stayin' Alive – Bee Gees","Summer of '69 – Bryan Adams",
-    "Sunflower – Post Malone & Swae Lee","Supersonic – Oasis","Sweet Caroline – Neil Diamond",
-    "Sweet Dreams – Eurythmics","Take On Me – a-ha","Teenage Kicks – The Undertones",
-    "Tequila – The Champs","Thank U – Alanis Morissette","The One I Love – R.E.M.",
-    "The One and Only – Chesney Hawkes","The Seeker – The Who","Twentieth Century Boy – T. Rex",
-    "Twist and Shout – The Beatles","Uptown Funk – Mark Ronson ft. Bruno Mars","Valerie – Zutons / Amy Winehouse",
-    "Walk Like an Egyptian – The Bangles","Walking On Sunshine – Katrina and The Waves","Walking on the Moon – The Police",
-    "Watermelon Sugar – Harry Styles","We Are Never Getting Back Together – Taylor Swift","Weather With You – Crowded House",
-    "West End Girls – Pet Shop Boys","When the Sun Goes Down – Arctic Monkeys","Where Is My Mind? – Pixies",
-    "White Wedding – Billy Idol","Whole Lotta Love – Led Zeppelin","Wicked Game – Chris Isaak",
-    "With or Without You – U2","Wonderwall – Oasis","Wrecking Ball – Miley Cyrus",
-    "YMCA – Village People","Zombie – The Cranberries"
-  ];
+  // ── Song list from Google Sheets ──
+  const SHEET_ID  = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
+  const API_KEY   = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
+  const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+
+  let sheetSongs = []; // [{fullName, title, artist}]
+
+  async function loadSheetSongs() {
+    try {
+      const res  = await fetch(SHEET_URL);
+      const data = await res.json();
+      const rows = (data.values || []).slice(1);
+      sheetSongs = rows
+        .filter(r => r[0])
+        .map(r => ({
+          title:    (r[0] || '').trim(),
+          artist:   (r[1] || '').trim(),
+          fullName: r[1] ? `${r[0].trim()} – ${r[1].trim()}` : r[0].trim()
+        }));
+    } catch(e) {
+      console.warn('Could not load sheet songs, setlist may be empty.');
+    }
+  }
 
   // ── Normalise filename/song for matching ──
   function normalize(s) {
@@ -728,16 +706,17 @@
 
   function renderSetlist() {
     const used = getUsedSongs();
-    const html = ALL_SONGS.map(s => {
-      const isUsed = used.includes(s);
-      return `<div class="songlist-entry${isUsed ? ' used' : ''}">${s}</div>`;
+    const html = sheetSongs.map(s => {
+      const isUsed = used.includes(s.fullName);
+      return `<div class="songlist-entry${isUsed ? ' used' : ''}">${s.fullName}</div>`;
     }).join('');
     document.getElementById('setlistCols').innerHTML = html;
     document.getElementById('setlistColsDupe').innerHTML = html;
   }
 
-  function showSetlist() {
+  async function showSetlist() {
     document.getElementById('videoPlaceholder').style.display = 'block';
+    if (sheetSongs.length === 0) await loadSheetSongs();
     renderSetlist();
   }
 
@@ -908,7 +887,7 @@
   setInterval(function() { if (!isDragging) render(); }, 5000);
   resetIfNewDay();
   showDate();
-  showSetlist();
+  loadSheetSongs().then(() => showSetlist());
   render();
 </script>
 </body>
