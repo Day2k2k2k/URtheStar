@@ -381,6 +381,75 @@
     .video-status.missing { color: #ff8a65; }
     .video-status.loading { color: var(--cyan); }
 
+    .header-qr {
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Folder prompt overlay */
+    #folderPrompt {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .folder-prompt-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .folder-prompt-box h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .folder-prompt-box p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .folder-prompt-box .btn-load {
+      width: 100%;
+      padding: 14px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .folder-prompt-box .btn-load:hover { background: #e07800; }
+
+    .folder-prompt-box .btn-skip {
+      margin-top: 12px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; height: auto; }
       .left-col { height: auto; overflow: visible; }
@@ -390,32 +459,31 @@
 </head>
 <body>
 
+<!-- Folder prompt overlay -->
+<div id="folderPrompt">
+  <div class="folder-prompt-box">
+    <h2>Load Backing Tracks</h2>
+    <p>Select your <strong>URtheStarSongs</strong> folder so videos can play automatically when Next Singer is pressed.</p>
+    <button class="btn-load" id="loadFolderBtn">📁 Select Songs Folder</button>
+    <br>
+    <button class="btn-skip" id="skipFolderBtn">Skip for now</button>
+  </div>
+</div>
+
 <header>
   <div style="display:flex; align-items:center; gap:14px;">
     <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:96px; width:auto; display:block;">
     <span class="logo">UR THE STAR</span>
   </div>
-  <span class="band-badge">🎸 Band Control</span>
+  <div class="header-qr">
+    <img src="songs-qr-code.png" alt="QR code to song picker" style="width:120px; height:120px; display:block;">
+  </div>
 </header>
 
 <div class="layout">
 
   <!-- LEFT SIDEBAR -->
   <div class="left-col">
-
-    <!-- QR Code -->
-    <div class="sidebar-section">
-      <p class="card-label">Scan to pick a song</p>
-      <div class="qr-wrap">
-        <img src="songs-qr-code.png" alt="QR code to song picker" style="width:180px; height:180px; display:block;">
-      </div>
-    </div>
-
-    <!-- Load Videos Folder -->
-    <div class="sidebar-section">
-      <p class="card-label">Backing tracks</p>
-      <button id="loadFolderBtn" style="width:100%; padding:10px 14px; background:rgba(252,134,0,0.1); border:1px solid var(--pink); border-radius:8px; color:var(--pink); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; text-align:left;">📁 Load Songs Folder</button>
-    </div>
 
     <!-- Now Singing -->
     <div class="sidebar-section" style="border-left: 3px solid var(--pink); padding-left: 17px;">
@@ -555,27 +623,29 @@
     return top >= 40 ? localFiles[best] : null;
   }
 
-  // ── Load folder ──
+  // ── Folder prompt ──
   document.getElementById('loadFolderBtn').addEventListener('click', async function() {
     try {
       const dirHandle = await window.showDirectoryPicker();
       localFiles = {};
       for await (const [name, handle] of dirHandle.entries()) {
         if (handle.kind === 'file' && /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(name)) {
-          const key = name.replace(/\.[^.]+$/, ''); // strip extension
+          const key = name.replace(/\.[^.]+$/, '');
           localFiles[key] = handle;
         }
       }
       const count = Object.keys(localFiles).length;
       folderLoaded = true;
-      document.getElementById('loadFolderBtn').textContent = `✓ ${count} videos loaded`;
-      document.getElementById('loadFolderBtn').style.background = 'rgba(11,176,195,0.2)';
-      document.getElementById('loadFolderBtn').style.borderColor = 'var(--cyan)';
-      document.getElementById('loadFolderBtn').style.color = 'var(--cyan)';
-      setStatus(`${count} video files indexed from folder`, 'found');
+      document.getElementById('folderPrompt').style.display = 'none';
+      setStatus(`✓ ${count} backing tracks loaded`, 'found');
     } catch(e) {
       if (e.name !== 'AbortError') setStatus('Could not load folder: ' + e.message, 'missing');
     }
+  });
+
+  document.getElementById('skipFolderBtn').addEventListener('click', function() {
+    document.getElementById('folderPrompt').style.display = 'none';
+    setStatus('No backing tracks loaded', 'missing');
   });
 
   // ── Play video ──
