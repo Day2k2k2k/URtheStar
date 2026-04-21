@@ -237,6 +237,110 @@
     .loading { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
     .no-results { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; display: none; }
 
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: var(--pink); border-bottom-color: var(--pink); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Request items ── */
+    #requestList { list-style: none; }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .req-count {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--pink);
+      min-width: 44px;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .req-count-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      text-align: center;
+    }
+
+    .req-info { flex: 1; min-width: 0; }
+
+    .req-song { font-size: 16px; font-weight: 600; }
+    .req-song .song-title { color: #fff; }
+    .req-song .song-artist { color: var(--cyan); font-weight: 400; }
+
+    .req-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .req-note { font-size: 12px; color: rgba(255,255,255,0.5); font-style: italic; margin-top: 3px; }
+
+    .req-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pink);
+      background: rgba(252,134,0,0.1);
+      border: 1px solid rgba(252,134,0,0.25);
+      padding: 4px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.35; }
+    .empty-state h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .empty-state p { font-size: 14px; color: var(--muted); }
+
     @media (max-width: 750px) {
       .layout { grid-template-columns: 1fr; }
       .form-card { position: static; }
@@ -278,34 +382,64 @@
     <a href="https://docs.google.com/spreadsheets/d/1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg/edit" target="_blank" class="sheet-link">✏️ Edit sheet directly in Google Sheets →</a>
   </div>
 
-  <!-- SONG LIST -->
+  <!-- RIGHT: TABBED PANEL -->
   <div>
-    <div class="list-header">
-      <h2 class="list-title">The <span>Setlist</span></h2>
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <span class="pill" id="songCount">Loading…</span>
-        <button class="btn-refresh" id="refreshBtn">↺ Refresh</button>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="setlist">🎵 Setlist</button>
+      <button class="tab-btn" data-tab="requests">📩 Song Requests <span id="reqBadge" style="display:none; background:var(--pink); color:#fff; font-size:10px; padding:2px 7px; border-radius:20px; margin-left:6px;"></span></button>
+    </div>
+
+    <!-- SETLIST TAB -->
+    <div class="tab-panel active" id="tab-setlist">
+      <div class="list-header">
+        <h2 class="list-title">The <span>Setlist</span></h2>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="pill" id="songCount">Loading…</span>
+          <button class="btn-refresh" id="refreshBtn">↺ Refresh</button>
+        </div>
       </div>
+
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="adminSearch" placeholder="Search songs...">
+      </div>
+
+      <div class="genre-tabs" id="genreTabs">
+        <button class="genre-tab active" data-genre="all">All</button>
+        <button class="genre-tab" data-genre="rock">Rock</button>
+        <button class="genre-tab" data-genre="indie">Indie</button>
+        <button class="genre-tab" data-genre="pop">Pop</button>
+        <button class="genre-tab" data-genre="classic">Classics</button>
+        <button class="genre-tab" data-genre="party">Party</button>
+      </div>
+
+      <p class="no-results" id="noResults">No songs match.</p>
+      <div id="listWrap"><div class="loading">Loading songs from Google Sheets…</div></div>
     </div>
 
-    <div class="search-wrap">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" id="adminSearch" placeholder="Search songs...">
+    <!-- REQUESTS TAB -->
+    <div class="tab-panel" id="tab-requests">
+      <div class="list-header">
+        <h2 class="list-title">Song <span>Requests</span></h2>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="pill" id="reqCount">0 requests</span>
+          <button class="btn-refresh" id="clearReqBtn" style="color:var(--pink); border-color:rgba(252,134,0,0.3);">Clear all</button>
+        </div>
+      </div>
+      <p id="reqDate" style="font-size:13px; color:var(--muted); margin-bottom:20px;"></p>
+
+      <div class="empty-state" id="reqEmptyState">
+        <div class="icon">🎵</div>
+        <h3>No requests yet</h3>
+        <p>Share the request link with your audience!</p>
+      </div>
+
+      <ul id="requestList"></ul>
     </div>
 
-    <div class="genre-tabs" id="genreTabs">
-      <button class="genre-tab active" data-genre="all">All</button>
-      <button class="genre-tab" data-genre="rock">Rock</button>
-      <button class="genre-tab" data-genre="indie">Indie</button>
-      <button class="genre-tab" data-genre="pop">Pop</button>
-      <button class="genre-tab" data-genre="classic">Classics</button>
-      <button class="genre-tab" data-genre="party">Party</button>
-    </div>
-
-    <p class="no-results" id="noResults">No songs match.</p>
-    <div id="listWrap"><div class="loading">Loading songs from Google Sheets…</div></div>
   </div>
 
 </div>
@@ -466,6 +600,121 @@
       if (e.key === 'Enter') document.getElementById('addBtn').click();
     });
   });
+
+  // ── Tab switching ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+      if (this.dataset.tab === 'requests') renderRequests();
+    });
+  });
+
+  // ── Requests ──
+  const REQ_KEY      = 'urthestar_requests';
+  const REQ_DATE_KEY = 'urthestar_requests_date';
+
+  function todayStr() { return new Date().toDateString(); }
+
+  function loadRequests() {
+    try {
+      const date = localStorage.getItem(REQ_DATE_KEY);
+      if (date !== todayStr()) return [];
+      return JSON.parse(localStorage.getItem(REQ_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveRequests(reqs) {
+    localStorage.setItem(REQ_KEY, JSON.stringify(reqs));
+    localStorage.setItem(REQ_DATE_KEY, todayStr());
+  }
+
+  function renderRequests() {
+    const reqs   = loadRequests();
+    const list   = document.getElementById('requestList');
+    const empty  = document.getElementById('reqEmptyState');
+    const count  = document.getElementById('reqCount');
+    const badge  = document.getElementById('reqBadge');
+
+    reqs.sort((a, b) => (b.count || 1) - (a.count || 1) || a.timestamp - b.timestamp);
+
+    count.textContent = `${reqs.length} request${reqs.length !== 1 ? 's' : ''}`;
+
+    // Badge on tab
+    if (reqs.length > 0) {
+      badge.textContent = reqs.length;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // Date
+    document.getElementById('reqDate').textContent =
+      new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    list.innerHTML = '';
+
+    if (reqs.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    reqs.forEach((req, idx) => {
+      const li = document.createElement('li');
+      li.className = 'req-item';
+      const names  = req.names && req.names.length ? req.names.join(', ') : (req.name || '');
+      const artist = req.artist ? ` – ${req.artist}` : '';
+      li.innerHTML = `
+        <div class="req-count">
+          x${req.count || 1}
+          <span class="req-count-label">request${(req.count||1) > 1 ? 's' : ''}</span>
+        </div>
+        <div class="req-info">
+          <div class="req-song">
+            <span class="song-title">${esc(req.song)}</span><span class="song-artist">${esc(artist)}</span>
+          </div>
+          ${names ? `<div class="req-meta">👤 ${esc(names)}</div>` : ''}
+          ${req.note ? `<div class="req-note">"${esc(req.note)}"</div>` : ''}
+        </div>
+        ${(req.count || 1) >= 3 ? '<span class="req-badge">Popular!</span>' : ''}
+        <button class="btn-remove" data-idx="${idx}" title="Delete request">✕</button>
+      `;
+      list.appendChild(li);
+    });
+
+    list.querySelectorAll('.btn-remove').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const reqs = loadRequests();
+        const req  = reqs[parseInt(this.dataset.idx)];
+        if (!req) return;
+        if (confirm(`Delete request for "${req.song}"?`)) {
+          reqs.splice(parseInt(this.dataset.idx), 1);
+          saveRequests(reqs);
+          renderRequests();
+        }
+      });
+    });
+  }
+
+  document.getElementById('clearReqBtn').addEventListener('click', function() {
+    if (confirm('Clear all song requests?')) {
+      saveRequests([]);
+      renderRequests();
+    }
+  });
+
+  // Check for new requests every hour and update badge
+  setInterval(() => {
+    const reqs  = loadRequests();
+    const badge = document.getElementById('reqBadge');
+    if (reqs.length > 0) { badge.textContent = reqs.length; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+    if (document.getElementById('tab-requests').classList.contains('active')) renderRequests();
+  }, 3600000);
 
   loadSongs();
 </script>
