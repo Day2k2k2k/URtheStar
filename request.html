@@ -242,9 +242,10 @@
     }
 
     const reqs = loadRequests();
-    // Check if same song+artist already requested — if so increment count
-    const key = (song + '|' + artist).toLowerCase();
-    const existing = reqs.find(r => (r.song + '|' + r.artist).toLowerCase() === key);
+    // Normalise for comparison — lowercase, strip extra spaces and punctuation
+    function norm(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, '').trim(); }
+    const key = norm(song) + '|' + norm(artist);
+    const existing = reqs.find(r => norm(r.song) + '|' + norm(r.artist) === key);
     if (existing) {
       existing.count = (existing.count || 1) + 1;
       existing.names = existing.names || [];
