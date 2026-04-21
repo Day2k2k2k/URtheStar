@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Song Requests - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #fc8600;
+      --cyan: #0bb0c3;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px 32px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+
+    .page-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .page-title span { color: var(--pink); }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 5px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-clear:hover { color: var(--pink); border-color: rgba(252,134,0,0.4); }
+
+    /* Request items */
+    #requestList { list-style: none; }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .req-count {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--pink);
+      min-width: 44px;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .req-count-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      text-align: center;
+    }
+
+    .req-info { flex: 1; min-width: 0; }
+
+    .req-song {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .req-song .song-title { color: #fff; }
+    .req-song .song-artist { color: var(--cyan); font-weight: 400; }
+
+    .req-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .req-note {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-style: italic;
+      margin-top: 3px;
+    }
+
+    .req-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pink);
+      background: rgba(252,134,0,0.1);
+      border: 1px solid rgba(252,134,0,0.25);
+      padding: 4px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      display: none;
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.35; }
+
+    .empty-state h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p { font-size: 14px; color: var(--muted); }
+
+    @media (max-width: 500px) {
+      .req-item { padding: 14px 16px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:56px; width:auto; display:block;">
+  <a href="band.html" class="back-link">← Band Page</a>
+</header>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Song<br><span>Requests</span></h1>
+      <p id="todayDate" style="font-size:14px; color:var(--muted); margin-top:8px;"></p>
+    </div>
+    <div class="meta-row">
+      <span class="pill" id="reqCount">0 requests</span>
+      <button class="btn-clear" id="clearBtn">Clear all</button>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🎵</div>
+    <h3>No requests yet</h3>
+    <p>Share the request link with your audience!</p>
+  </div>
+
+  <ul id="requestList"></ul>
+</div>
+
+<script>
+  const REQ_KEY      = 'urthestar_requests';
+  const REQ_DATE_KEY = 'urthestar_requests_date';
+
+  function todayStr() { return new Date().toDateString(); }
+
+  function loadRequests() {
+    try {
+      const date = localStorage.getItem(REQ_DATE_KEY);
+      if (date !== todayStr()) return [];
+      return JSON.parse(localStorage.getItem(REQ_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveRequests(reqs) {
+    localStorage.setItem(REQ_KEY, JSON.stringify(reqs));
+    localStorage.setItem(REQ_DATE_KEY, todayStr());
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    const reqs  = loadRequests();
+    const list  = document.getElementById('requestList');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('reqCount');
+
+    // Sort by count descending, then by timestamp
+    reqs.sort((a, b) => (b.count || 1) - (a.count || 1) || a.timestamp - b.timestamp);
+
+    count.textContent = `${reqs.length} request${reqs.length !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+
+    if (reqs.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    reqs.forEach((req, i) => {
+      const li = document.createElement('li');
+      li.className = 'req-item';
+      const names = req.names && req.names.length ? req.names.join(', ') : (req.name || '');
+      const artist = req.artist ? ` – ${req.artist}` : '';
+      li.innerHTML = `
+        <div class="req-count">
+          x${req.count || 1}
+          <span class="req-count-label">request${(req.count||1) > 1 ? 's' : ''}</span>
+        </div>
+        <div class="req-info">
+          <div class="req-song">
+            <span class="song-title">${esc(req.song)}</span><span class="song-artist">${esc(artist)}</span>
+          </div>
+          ${names ? `<div class="req-meta">👤 ${esc(names)}</div>` : ''}
+          ${req.note ? `<div class="req-note">"${esc(req.note)}"</div>` : ''}
+        </div>
+        ${(req.count || 1) >= 3 ? '<span class="req-badge">Popular!</span>' : ''}
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function showDate() {
+    document.getElementById('todayDate').textContent =
+      new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    if (confirm('Clear all song requests?')) {
+      saveRequests([]);
+      render();
+    }
+  });
+
+  // Auto-refresh every 10 seconds to catch new requests
+  setInterval(render, 10000);
+  showDate();
+  render();
+</script>
+</body>
+</html>

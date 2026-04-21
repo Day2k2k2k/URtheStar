@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request a Song - U R The Star</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #fc8600;
+      --cyan: #0bb0c3;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px 32px;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+
+    .page-wrap {
+      max-width: 520px;
+      margin: 60px auto;
+      padding: 0 20px 60px;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .page-title span { color: var(--pink); }
+
+    .page-sub {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--cyan); }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit:hover { background: #e07800; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Success state */
+    #successMsg {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+    }
+
+    #successMsg h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    #successMsg p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .btn-another {
+      display: inline-block;
+      padding: 12px 28px;
+      background: transparent;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-another:hover { border-color: rgba(255,255,255,0.3); background: var(--surface2); }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="height:56px; width:auto; display:block;">
+  <a href="index.html" class="back-link">← Back to Home</a>
+</header>
+
+<div class="page-wrap">
+  <h1 class="page-title">Request<br>a <span>Song</span></h1>
+  <p class="page-sub">Can't see your track on the setlist? Send us a request and we'll do our best!</p>
+
+  <div class="form-card">
+    <div id="requestForm">
+      <div class="form-group">
+        <label for="reqSong">Song title</label>
+        <input type="text" id="reqSong" placeholder="e.g. Bohemian Rhapsody">
+      </div>
+      <div class="form-group">
+        <label for="reqArtist">Artist</label>
+        <input type="text" id="reqArtist" placeholder="e.g. Queen">
+      </div>
+      <div class="form-group">
+        <label for="reqName">Your name (optional)</label>
+        <input type="text" id="reqName" placeholder="e.g. Sarah">
+      </div>
+      <div class="form-group">
+        <label for="reqNote">Anything else? (optional)</label>
+        <textarea id="reqNote" rows="3" placeholder="e.g. It's my birthday!"></textarea>
+      </div>
+      <button class="btn-submit" id="submitBtn">🎵 Send Request</button>
+    </div>
+
+    <div id="successMsg">
+      <div class="success-icon">🎸</div>
+      <h2>Request Sent!</h2>
+      <p>We'll let the band know. Fingers crossed they know it!</p>
+      <a href="songs.html" class="btn-another">← Back to song list</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const REQ_KEY      = 'urthestar_requests';
+  const REQ_DATE_KEY = 'urthestar_requests_date';
+
+  function todayStr() { return new Date().toDateString(); }
+
+  function loadRequests() {
+    try {
+      const date = localStorage.getItem(REQ_DATE_KEY);
+      if (date !== todayStr()) {
+        localStorage.setItem(REQ_KEY, JSON.stringify([]));
+        localStorage.setItem(REQ_DATE_KEY, todayStr());
+        return [];
+      }
+      return JSON.parse(localStorage.getItem(REQ_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveRequests(reqs) {
+    localStorage.setItem(REQ_KEY, JSON.stringify(reqs));
+    localStorage.setItem(REQ_DATE_KEY, todayStr());
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', function() {
+    const song   = document.getElementById('reqSong').value.trim();
+    const artist = document.getElementById('reqArtist').value.trim();
+    const name   = document.getElementById('reqName').value.trim();
+    const note   = document.getElementById('reqNote').value.trim();
+
+    if (!song) {
+      document.getElementById('reqSong').style.borderColor = 'var(--pink)';
+      setTimeout(() => document.getElementById('reqSong').style.borderColor = '', 1500);
+      return;
+    }
+
+    const reqs = loadRequests();
+    // Check if same song+artist already requested — if so increment count
+    const key = (song + '|' + artist).toLowerCase();
+    const existing = reqs.find(r => (r.song + '|' + r.artist).toLowerCase() === key);
+    if (existing) {
+      existing.count = (existing.count || 1) + 1;
+      existing.names = existing.names || [];
+      if (name) existing.names.push(name);
+    } else {
+      reqs.push({ song, artist, name, note, count: 1, names: name ? [name] : [], timestamp: Date.now() });
+    }
+    saveRequests(reqs);
+
+    document.getElementById('requestForm').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'block';
+  });
+</script>
+</body>
+</html>
