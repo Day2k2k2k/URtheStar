@@ -579,30 +579,7 @@
 
   let localFiles    = {};   // { normalizedName: FileSystemFileHandle }
   let folderLoaded  = false;
-
-  // ── Song list from Google Sheets ──
-  const SHEET_ID  = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
-  const API_KEY   = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
-  const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
-
-  let sheetSongs = []; // [{fullName, title, artist}]
-
-  async function loadSheetSongs() {
-    try {
-      const res  = await fetch(SHEET_URL);
-      const data = await res.json();
-      const rows = (data.values || []).slice(1);
-      sheetSongs = rows
-        .filter(r => r[0])
-        .map(r => ({
-          title:    (r[0] || '').trim(),
-          artist:   (r[1] || '').trim(),
-          fullName: r[1] ? `${r[0].trim()} – ${r[1].trim()}` : r[0].trim()
-        }));
-    } catch(e) {
-      console.warn('Could not load sheet songs, setlist may be empty.');
-    }
-  }
+  let sheetSongs    = [];   // loaded from songs.json in the folder
 
   // ── Normalise filename/song for matching ──
   function normalize(s) {
@@ -634,21 +611,45 @@
     return top >= 40 ? localFiles[best] : null;
   }
 
-  // ── Folder prompt ──
+  // ── Folder prompt — loads videos AND songs.json ──
   document.getElementById('loadFolderBtn').addEventListener('click', async function() {
     try {
       const dirHandle = await window.showDirectoryPicker();
       localFiles = {};
+      let videoCount = 0;
+
       for await (const [name, handle] of dirHandle.entries()) {
-        if (handle.kind === 'file' && /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(name)) {
+        if (handle.kind !== 'file') continue;
+
+        // Index video files
+        if (/\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(name)) {
           const key = name.replace(/\.[^.]+$/, '');
           localFiles[key] = handle;
+          videoCount++;
+        }
+
+        // Load songs.json
+        if (name.toLowerCase() === 'songs.json') {
+          try {
+            const file = await handle.getFile();
+            const text = await file.text();
+            const data = JSON.parse(text);
+            sheetSongs = data.map(s => ({
+              title:    (s.title  || '').trim(),
+              artist:   (s.artist || '').trim(),
+              fullName: s.artist ? `${s.title.trim()} – ${s.artist.trim()}` : s.title.trim()
+            })).filter(s => s.title);
+          } catch(e) {
+            console.warn('Could not read songs.json:', e);
+          }
         }
       }
-      const count = Object.keys(localFiles).length;
+
       folderLoaded = true;
       document.getElementById('folderPrompt').style.display = 'none';
-      setStatus(`✓ ${count} backing tracks loaded`, 'found');
+      const songInfo = sheetSongs.length > 0 ? `, ${sheetSongs.length} songs loaded` : ' — songs.json not found';
+      setStatus(`✓ ${videoCount} videos${songInfo}`, 'found');
+      renderSetlist();
     } catch(e) {
       if (e.name !== 'AbortError') setStatus('Could not load folder: ' + e.message, 'missing');
     }
@@ -656,7 +657,19 @@
 
   document.getElementById('skipFolderBtn').addEventListener('click', function() {
     document.getElementById('folderPrompt').style.display = 'none';
-    setStatus('No backing tracks loaded', 'missing');
+    // Fall back to fetching songs.json from the website
+    fetch('songs.json')
+      .then(r => r.json())
+      .then(data => {
+        sheetSongs = data.map(s => ({
+          title:    (s.title  || '').trim(),
+          artist:   (s.artist || '').trim(),
+          fullName: s.artist ? `${s.title.trim()} – ${s.artist.trim()}` : s.title.trim()
+        })).filter(s => s.title);
+        renderSetlist();
+        setStatus('No backing tracks loaded — songs loaded from website', 'loading');
+      })
+      .catch(() => setStatus('No backing tracks loaded', 'missing'));
   });
 
   // ── Play video ──
@@ -887,7 +900,18 @@
   setInterval(function() { if (!isDragging) render(); }, 5000);
   resetIfNewDay();
   showDate();
-  loadSheetSongs().then(() => showSetlist());
+  // Load songs.json from website as initial fallback (folder picker will override)
+  fetch('songs.json')
+    .then(r => r.json())
+    .then(data => {
+      sheetSongs = data.map(s => ({
+        title:    (s.title  || '').trim(),
+        artist:   (s.artist || '').trim(),
+        fullName: s.artist ? `${s.title.trim()} – ${s.artist.trim()}` : s.title.trim()
+      })).filter(s => s.title);
+      showSetlist();
+    })
+    .catch(() => showSetlist());
   render();
 </script>
 </body>

@@ -379,7 +379,7 @@
     </div>
     <button class="btn-add" id="addBtn">+ Add to Setlist</button>
     <p class="status-msg" id="statusMsg"></p>
-    <a href="https://docs.google.com/spreadsheets/d/1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg/edit" target="_blank" class="sheet-link">✏️ Edit sheet directly in Google Sheets →</a>
+    <button id="folderBtn" style="width:100%; margin-top:12px; padding:10px 14px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all 0.15s;">📁 Load Songs Folder</button>
   </div>
 
   <!-- RIGHT: TABBED PANEL -->
@@ -445,32 +445,73 @@
 </div>
 
 <script>
-  const SHEET_ID  = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
-  const API_KEY   = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
-  const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
-  const APPEND_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1:append?valueInputOption=RAW&key=${API_KEY}`;
-
-  let allSongs = [];
+  let allSongs    = [];
   let currentGenre = 'all';
+  let jsonHandle  = null; // FileSystemFileHandle for songs.json
 
-  // ── Load songs from sheet ──
-  async function loadSongs() {
+  // ── Load songs.json from folder ──
+  async function loadFromFolder() {
     try {
-      const res  = await fetch(SHEET_URL);
-      const data = await res.json();
-      const rows = data.values || [];
-      // Skip header row, build objects
-      allSongs = rows.slice(1).map((r, i) => ({
-        row: i + 2, // 1-indexed, +1 for header
-        title:  r[0] || '',
-        artist: r[1] || '',
-        genre:  (r[2] || 'rock').toLowerCase()
-      })).filter(s => s.title);
-      renderList();
+      const dirHandle = await window.showDirectoryPicker();
+      for await (const [name, handle] of dirHandle.entries()) {
+        if (name.toLowerCase() === 'songs.json' && handle.kind === 'file') {
+          jsonHandle = handle;
+          break;
+        }
+      }
+      if (!jsonHandle) {
+        setStatus('songs.json not found in that folder', 'err');
+        return;
+      }
+      await loadSongs();
+      setStatus('✓ songs.json loaded', 'ok');
+      document.getElementById('folderBtn').textContent = '✓ Folder loaded';
+      document.getElementById('folderBtn').style.borderColor = 'var(--cyan)';
+      document.getElementById('folderBtn').style.color = 'var(--cyan)';
     } catch(e) {
-      document.getElementById('listWrap').innerHTML = `<p style="color:#e05555; text-align:center; padding:30px;">Could not load sheet. Check your API key and sheet permissions.</p>`;
+      if (e.name !== 'AbortError') setStatus('Could not open folder: ' + e.message, 'err');
     }
   }
+
+  async function loadSongs() {
+    if (!jsonHandle) {
+      // Fall back to fetching from website
+      try {
+        const res  = await fetch('songs.json');
+        allSongs   = await res.json();
+        renderList();
+      } catch(e) {
+        document.getElementById('listWrap').innerHTML = `<p style="color:#e05555;text-align:center;padding:30px;">Load your songs folder to edit the setlist.</p>`;
+      }
+      return;
+    }
+    try {
+      const file = await jsonHandle.getFile();
+      const text = await file.text();
+      allSongs   = JSON.parse(text);
+      renderList();
+    } catch(e) {
+      setStatus('Could not read songs.json: ' + e.message, 'err');
+    }
+  }
+
+  async function saveSongs() {
+    if (!jsonHandle) {
+      setStatus('No folder loaded — cannot save', 'err');
+      return false;
+    }
+    try {
+      const writable = await jsonHandle.createWritable();
+      await writable.write(JSON.stringify(allSongs, null, 2));
+      await writable.close();
+      return true;
+    } catch(e) {
+      setStatus('Could not save: ' + e.message, 'err');
+      return false;
+    }
+  }
+
+  document.getElementById('folderBtn').addEventListener('click', loadFromFolder);
 
   // ── Render list ──
   function renderList() {
@@ -479,9 +520,10 @@
     const noRes   = document.getElementById('noResults');
     const count   = document.getElementById('songCount');
 
-    const filtered = allSongs.filter(s => {
-      const matchGenre  = currentGenre === 'all' || s.genre === currentGenre;
-      const matchSearch = !term || (s.title + ' ' + s.artist).toLowerCase().includes(term);
+    const filtered = allSongs.filter((s, i) => {
+      s._idx = i;
+      const matchGenre  = currentGenre === 'all' || (s.genre || '').toLowerCase() === currentGenre;
+      const matchSearch = !term || (s.title + ' ' + (s.artist||'')).toLowerCase().includes(term);
       return matchGenre && matchSearch;
     });
 
@@ -491,7 +533,12 @@
 
     const ul = document.createElement('ul');
     ul.id = 'songAdminList';
-    filtered.forEach(song => {
+    allSongs.forEach((song, i) => {
+      const genre = (song.genre || 'rock').toLowerCase();
+      const matchGenre  = currentGenre === 'all' || genre === currentGenre;
+      const matchSearch = !term || (song.title + ' ' + (song.artist||'')).toLowerCase().includes(term);
+      if (!matchGenre || !matchSearch) return;
+
       const li = document.createElement('li');
       li.className = 'admin-song-item';
       li.innerHTML = `
@@ -501,18 +548,24 @@
             ${song.artist ? `<span class="song-artist"> – ${esc(song.artist)}</span>` : ''}
           </div>
         </div>
-        <span class="genre-badge">${esc(song.genre)}</span>
-        <button class="btn-remove" data-row="${song.row}" title="Remove">✕</button>
+        <span class="genre-badge">${esc(genre)}</span>
+        <button class="btn-remove" data-idx="${i}" title="Remove">✕</button>
       `;
       ul.appendChild(li);
     });
     wrap.appendChild(ul);
 
-    // Remove buttons
     ul.querySelectorAll('.btn-remove').forEach(btn => {
       btn.addEventListener('click', async function() {
-        if (!confirm('Remove this song from the setlist?')) return;
-        await deleteSong(parseInt(this.dataset.row));
+        const idx  = parseInt(this.dataset.idx);
+        const song = allSongs[idx];
+        if (!confirm(`Remove "${song.title}" from the setlist?`)) return;
+        allSongs.splice(idx, 1);
+        const saved = await saveSongs();
+        if (saved) {
+          setStatus(`✓ "${song.title}" removed`, 'ok');
+          renderList();
+        }
       });
     });
   }
@@ -529,47 +582,22 @@
       return;
     }
 
-    setStatus('Adding…', 'info');
-    this.disabled = true;
-
-    try {
-      const res = await fetch(APPEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[title, artist, genre]] })
-      });
-
-      if (res.ok) {
-        setStatus(`✓ "${title}" added!`, 'ok');
-        document.getElementById('newTitle').value = '';
-        document.getElementById('newArtist').value = '';
-        await loadSongs();
-      } else {
-        const err = await res.json();
-        setStatus('Error: ' + (err.error?.message || 'Could not add song'), 'err');
-      }
-    } catch(e) {
-      setStatus('Network error — check connection', 'err');
+    if (!jsonHandle) {
+      setStatus('Load your songs folder first to save changes', 'err');
+      return;
     }
 
-    this.disabled = false;
+    allSongs.push({ title, artist, genre });
+    allSongs.sort((a, b) => a.title.localeCompare(b.title));
+
+    const saved = await saveSongs();
+    if (saved) {
+      setStatus(`✓ "${title}" added!`, 'ok');
+      document.getElementById('newTitle').value  = '';
+      document.getElementById('newArtist').value = '';
+      renderList();
+    }
   });
-
-  // ── Delete song (clear row) ──
-  async function deleteSong(rowNum) {
-    const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A${rowNum}:C${rowNum}:clear?key=${API_KEY}`;
-    try {
-      const res = await fetch(clearUrl, { method: 'POST' });
-      if (res.ok) {
-        setStatus('Song removed.', 'ok');
-        await loadSongs();
-      } else {
-        setStatus('Could not remove — try editing sheet directly.', 'err');
-      }
-    } catch(e) {
-      setStatus('Network error.', 'err');
-    }
-  }
 
   function setStatus(msg, cls) {
     const el = document.getElementById('statusMsg');
@@ -582,7 +610,6 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // Genre tabs
   document.getElementById('genreTabs').addEventListener('click', function(e) {
     if (!e.target.classList.contains('genre-tab')) return;
     document.querySelectorAll('.genre-tab').forEach(t => t.classList.remove('active'));
@@ -594,7 +621,6 @@
   document.getElementById('adminSearch').addEventListener('input', renderList);
   document.getElementById('refreshBtn').addEventListener('click', loadSongs);
 
-  // Enter key on inputs
   ['newTitle','newArtist'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('addBtn').click();
@@ -639,28 +665,16 @@
     const badge  = document.getElementById('reqBadge');
 
     reqs.sort((a, b) => (b.count || 1) - (a.count || 1) || a.timestamp - b.timestamp);
-
     count.textContent = `${reqs.length} request${reqs.length !== 1 ? 's' : ''}`;
 
-    // Badge on tab
-    if (reqs.length > 0) {
-      badge.textContent = reqs.length;
-      badge.style.display = 'inline';
-    } else {
-      badge.style.display = 'none';
-    }
+    if (reqs.length > 0) { badge.textContent = reqs.length; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
 
-    // Date
     document.getElementById('reqDate').textContent =
       new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     list.innerHTML = '';
-
-    if (reqs.length === 0) {
-      empty.style.display = 'block';
-      return;
-    }
-
+    if (reqs.length === 0) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
 
     reqs.forEach((req, idx) => {
@@ -701,13 +715,9 @@
   }
 
   document.getElementById('clearReqBtn').addEventListener('click', function() {
-    if (confirm('Clear all song requests?')) {
-      saveRequests([]);
-      renderRequests();
-    }
+    if (confirm('Clear all song requests?')) { saveRequests([]); renderRequests(); }
   });
 
-  // Check for new requests every hour and update badge
   setInterval(() => {
     const reqs  = loadRequests();
     const badge = document.getElementById('reqBadge');
