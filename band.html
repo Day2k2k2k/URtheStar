@@ -466,6 +466,8 @@
     .btn-next-header:hover   { background: #e07800; transform: translateY(-1px); }
     .btn-next-header:active  { transform: translateY(0); }
     .btn-next-header:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    .folder-prompt-box .btn-skip {
       margin-top: 12px;
       background: none;
       border: none;
@@ -474,6 +476,16 @@
       cursor: pointer;
       text-decoration: underline;
     }
+
+    .sync-status {
+      margin-top: 16px;
+      font-size: 13px;
+      min-height: 18px;
+      display: none;
+    }
+    .sync-status.ok      { color: #4caf7d; display: block; }
+    .sync-status.err     { color: #ff8a65; display: block; }
+    .sync-status.loading { color: var(--cyan); display: block; }
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; height: auto; }
       .left-col { height: auto; overflow: visible; }
@@ -489,6 +501,7 @@
     <h2>Load Backing Tracks</h2>
     <p>Select your <strong>URtheStarSongs</strong> folder so videos can play automatically when Next Singer is pressed.</p>
     <button class="btn-load" id="loadFolderBtn">📁 Select Songs Folder</button>
+    <p class="sync-status" id="syncStatus"></p>
     <br>
     <button class="btn-skip" id="skipFolderBtn">Skip for now</button>
   </div>
@@ -630,13 +643,20 @@
     return top >= 40 ? localFiles[best] : null;
   }
 
+  function setSyncStatus(msg, cls) {
+    const el = document.getElementById('syncStatus');
+    el.textContent = msg;
+    el.className = 'sync-status ' + cls;
+  }
+
   // ── Folder prompt — loads videos + syncs songs from Sheets to local songs.json ──
   document.getElementById('loadFolderBtn').addEventListener('click', async function() {
     try {
       const dirHandle = await window.showDirectoryPicker();
       localFiles = {};
 
-      // Index video files
+      setSyncStatus('Indexing videos…', 'loading');
+
       for await (const [name, handle] of dirHandle.entries()) {
         if (handle.kind === 'file' && /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(name)) {
           const key = name.replace(/\.[^.]+$/, '');
@@ -645,10 +665,9 @@
       }
       const videoCount = Object.keys(localFiles).length;
       folderLoaded = true;
-      document.getElementById('folderPrompt').style.display = 'none';
 
-      // Try to fetch latest songs from Google Sheets and save locally
-      setStatus(`✓ ${videoCount} videos loaded — syncing songs…`, 'loading');
+      setSyncStatus(`${videoCount} videos found — syncing songs from Sheets…`, 'loading');
+
       try {
         const res  = await fetch(SHEET_URL);
         const data = await res.json();
@@ -664,22 +683,21 @@
           const jsonFile = await dirHandle.getFileHandle('songs.json', { create: true });
           const writable = await jsonFile.createWritable();
           await writable.write(JSON.stringify(
-            sheetSongs.map((s, i) => ({
-              title:  s.title,
-              artist: s.artist,
-              genre:  (data.values[i + 1] || [])[2] || 'rock'
+            rows.filter(r => r[0]).map(r => ({
+              title:  (r[0] || '').trim(),
+              artist: (r[1] || '').trim(),
+              genre:  (r[2] || 'rock').toLowerCase().trim()
             })), null, 2
           ));
           await writable.close();
-          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs synced from Sheets`, 'found');
+          setSyncStatus(`✓ ${videoCount} videos · ${sheetSongs.length} songs synced & saved locally`, 'ok');
         } catch(e) {
-          // Couldn't write file — still use the fetched data in memory
-          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs loaded (couldn't save locally)`, 'found');
+          setSyncStatus(`✓ ${videoCount} videos · ${sheetSongs.length} songs loaded (couldn't save locally)`, 'ok');
         }
 
       } catch(e) {
-        // No internet — try to read existing local songs.json
-        setStatus('Offline — looking for local songs.json…', 'loading');
+        // No internet — try local cache
+        setSyncStatus('No internet — checking local cache…', 'loading');
         try {
           const jsonFile = await dirHandle.getFileHandle('songs.json');
           const file     = await jsonFile.getFile();
@@ -690,15 +708,21 @@
             artist:   (s.artist || '').trim(),
             fullName: s.artist ? `${s.title.trim()} – ${s.artist.trim()}` : s.title.trim()
           })).filter(s => s.title);
-          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs loaded from local cache`, 'found');
+          setSyncStatus(`✓ ${videoCount} videos · ${sheetSongs.length} songs from local cache`, 'ok');
         } catch(e2) {
-          setStatus(`✓ ${videoCount} videos loaded — no song list found`, 'missing');
+          setSyncStatus(`✓ ${videoCount} videos · no song list found`, 'err');
         }
       }
 
       renderSetlist();
+
+      // Close the prompt after a short pause so they can read the status
+      setTimeout(() => {
+        document.getElementById('folderPrompt').style.display = 'none';
+      }, 1800);
+
     } catch(e) {
-      if (e.name !== 'AbortError') setStatus('Could not load folder: ' + e.message, 'missing');
+      if (e.name !== 'AbortError') setSyncStatus('Could not load folder: ' + e.message, 'err');
     }
   });
 
