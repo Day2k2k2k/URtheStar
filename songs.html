@@ -484,6 +484,10 @@
 </div>
 
 <script>
+  const SHEET_ID   = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
+  const API_KEY    = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
+  const SHEET_URL  = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+
   const searchEl   = document.getElementById('search');
   const songList   = document.getElementById('songList');
   const songCount  = document.getElementById('songCount');
@@ -527,18 +531,19 @@
     }
   }
 
-  // ── Load songs from songs.json ──
+  // ── Load songs from Google Sheets ──
   async function loadSongs() {
     try {
-      const res  = await fetch('songs.json');
+      const res  = await fetch(SHEET_URL);
       const data = await res.json();
+      const rows = (data.values || []).slice(1);
       songList.innerHTML = '';
       allSongEls = [];
 
-      data.forEach(song => {
-        const title  = (song.title  || '').trim();
-        const artist = (song.artist || '').trim();
-        const genre  = (song.genre  || 'rock').toLowerCase().trim();
+      rows.forEach(row => {
+        const title  = (row[0] || '').trim();
+        const artist = (row[1] || '').trim();
+        const genre  = (row[2] || 'rock').toLowerCase().trim();
         if (!title) return;
 
         const fullName = artist ? `${title} – ${artist}` : title;
@@ -564,7 +569,7 @@
       applyUsedSongs();
       filterSongs();
     } catch(e) {
-      loadingMsg.textContent = 'Could not load songs.';
+      loadingMsg.textContent = 'Could not load songs — please check your connection.';
     }
   }
 

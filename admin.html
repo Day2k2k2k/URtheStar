@@ -379,7 +379,7 @@
     </div>
     <button class="btn-add" id="addBtn">+ Add to Setlist</button>
     <p class="status-msg" id="statusMsg"></p>
-    <button id="folderBtn" style="width:100%; margin-top:12px; padding:10px 14px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all 0.15s;">📁 Load Songs Folder</button>
+    <a href="https://docs.google.com/spreadsheets/d/1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg/edit" target="_blank" class="sheet-link">✏️ Edit directly in Google Sheets →</a>
   </div>
 
   <!-- RIGHT: TABBED PANEL -->
@@ -445,100 +445,49 @@
 </div>
 
 <script>
-  let allSongs    = [];
-  let currentGenre = 'all';
-  let jsonHandle  = null; // FileSystemFileHandle for songs.json
+  const SHEET_ID   = '1WflWLizxpj3QJveA2y4vC8MwafQ1LBI2grhNVz8h3Dg';
+  const API_KEY    = 'AIzaSyAWit6wEJCofhTDZlqMIyXhpJ5vEkLNiCA';
+  const SHEET_URL  = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+  const APPEND_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1:append?valueInputOption=RAW&key=${API_KEY}`;
 
-  // ── Load songs.json from folder ──
-  async function loadFromFolder() {
-    try {
-      const dirHandle = await window.showDirectoryPicker();
-      for await (const [name, handle] of dirHandle.entries()) {
-        if (name.toLowerCase() === 'songs.json' && handle.kind === 'file') {
-          jsonHandle = handle;
-          break;
-        }
-      }
-      if (!jsonHandle) {
-        setStatus('songs.json not found in that folder', 'err');
-        return;
-      }
-      await loadSongs();
-      setStatus('✓ songs.json loaded', 'ok');
-      document.getElementById('folderBtn').textContent = '✓ Folder loaded';
-      document.getElementById('folderBtn').style.borderColor = 'var(--cyan)';
-      document.getElementById('folderBtn').style.color = 'var(--cyan)';
-    } catch(e) {
-      if (e.name !== 'AbortError') setStatus('Could not open folder: ' + e.message, 'err');
-    }
-  }
+  let allSongs     = [];
+  let currentGenre = 'all';
 
   async function loadSongs() {
-    if (!jsonHandle) {
-      // Fall back to fetching from website
-      try {
-        const res  = await fetch('songs.json');
-        allSongs   = await res.json();
-        renderList();
-      } catch(e) {
-        document.getElementById('listWrap').innerHTML = `<p style="color:#e05555;text-align:center;padding:30px;">Load your songs folder to edit the setlist.</p>`;
-      }
-      return;
-    }
     try {
-      const file = await jsonHandle.getFile();
-      const text = await file.text();
-      allSongs   = JSON.parse(text);
+      const res  = await fetch(SHEET_URL);
+      const data = await res.json();
+      allSongs   = (data.values || []).slice(1).map((r, i) => ({
+        row: i + 2,
+        title:  (r[0] || '').trim(),
+        artist: (r[1] || '').trim(),
+        genre:  (r[2] || 'rock').toLowerCase()
+      })).filter(s => s.title);
       renderList();
     } catch(e) {
-      setStatus('Could not read songs.json: ' + e.message, 'err');
+      document.getElementById('listWrap').innerHTML = `<p style="color:#e05555;text-align:center;padding:30px;">Could not load sheet. Check API key and sheet permissions.</p>`;
     }
   }
 
-  async function saveSongs() {
-    if (!jsonHandle) {
-      setStatus('No folder loaded — cannot save', 'err');
-      return false;
-    }
-    try {
-      const writable = await jsonHandle.createWritable();
-      await writable.write(JSON.stringify(allSongs, null, 2));
-      await writable.close();
-      return true;
-    } catch(e) {
-      setStatus('Could not save: ' + e.message, 'err');
-      return false;
-    }
-  }
-
-  document.getElementById('folderBtn').addEventListener('click', loadFromFolder);
-
-  // ── Render list ──
   function renderList() {
     const term    = document.getElementById('adminSearch').value.toLowerCase();
     const wrap    = document.getElementById('listWrap');
     const noRes   = document.getElementById('noResults');
     const count   = document.getElementById('songCount');
 
-    const filtered = allSongs.filter((s, i) => {
-      s._idx = i;
-      const matchGenre  = currentGenre === 'all' || (s.genre || '').toLowerCase() === currentGenre;
-      const matchSearch = !term || (s.title + ' ' + (s.artist||'')).toLowerCase().includes(term);
-      return matchGenre && matchSearch;
-    });
-
     count.textContent = `${allSongs.length} song${allSongs.length !== 1 ? 's' : ''}`;
     wrap.innerHTML = '';
+
+    const filtered = allSongs.filter(s =>
+      (currentGenre === 'all' || s.genre === currentGenre) &&
+      (!term || (s.title + ' ' + s.artist).toLowerCase().includes(term))
+    );
+
     noRes.style.display = filtered.length === 0 ? 'block' : 'none';
 
     const ul = document.createElement('ul');
     ul.id = 'songAdminList';
-    allSongs.forEach((song, i) => {
-      const genre = (song.genre || 'rock').toLowerCase();
-      const matchGenre  = currentGenre === 'all' || genre === currentGenre;
-      const matchSearch = !term || (song.title + ' ' + (song.artist||'')).toLowerCase().includes(term);
-      if (!matchGenre || !matchSearch) return;
-
+    filtered.forEach(song => {
       const li = document.createElement('li');
       li.className = 'admin-song-item';
       li.innerHTML = `
@@ -548,8 +497,8 @@
             ${song.artist ? `<span class="song-artist"> – ${esc(song.artist)}</span>` : ''}
           </div>
         </div>
-        <span class="genre-badge">${esc(genre)}</span>
-        <button class="btn-remove" data-idx="${i}" title="Remove">✕</button>
+        <span class="genre-badge">${esc(song.genre)}</span>
+        <button class="btn-remove" data-row="${song.row}" title="Remove">✕</button>
       `;
       ul.appendChild(li);
     });
@@ -557,47 +506,52 @@
 
     ul.querySelectorAll('.btn-remove').forEach(btn => {
       btn.addEventListener('click', async function() {
-        const idx  = parseInt(this.dataset.idx);
-        const song = allSongs[idx];
-        if (!confirm(`Remove "${song.title}" from the setlist?`)) return;
-        allSongs.splice(idx, 1);
-        const saved = await saveSongs();
-        if (saved) {
-          setStatus(`✓ "${song.title}" removed`, 'ok');
-          renderList();
-        }
+        if (!confirm('Remove this song from the setlist?')) return;
+        await deleteSong(parseInt(this.dataset.row));
       });
     });
   }
 
-  // ── Add song ──
   document.getElementById('addBtn').addEventListener('click', async function() {
     const title  = document.getElementById('newTitle').value.trim();
     const artist = document.getElementById('newArtist').value.trim();
     const genre  = document.getElementById('newGenre').value;
-
     if (!title) {
       document.getElementById('newTitle').style.borderColor = 'var(--pink)';
       setTimeout(() => document.getElementById('newTitle').style.borderColor = '', 1500);
       return;
     }
-
-    if (!jsonHandle) {
-      setStatus('Load your songs folder first to save changes', 'err');
-      return;
+    setStatus('Adding…', 'info');
+    this.disabled = true;
+    try {
+      const res = await fetch(APPEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[title, artist, genre]] })
+      });
+      if (res.ok) {
+        setStatus(`✓ "${title}" added!`, 'ok');
+        document.getElementById('newTitle').value  = '';
+        document.getElementById('newArtist').value = '';
+        await loadSongs();
+      } else {
+        const err = await res.json();
+        setStatus('Error: ' + (err.error?.message || 'Could not add song'), 'err');
+      }
+    } catch(e) {
+      setStatus('Network error — check connection', 'err');
     }
-
-    allSongs.push({ title, artist, genre });
-    allSongs.sort((a, b) => a.title.localeCompare(b.title));
-
-    const saved = await saveSongs();
-    if (saved) {
-      setStatus(`✓ "${title}" added!`, 'ok');
-      document.getElementById('newTitle').value  = '';
-      document.getElementById('newArtist').value = '';
-      renderList();
-    }
+    this.disabled = false;
   });
+
+  async function deleteSong(rowNum) {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A${rowNum}:C${rowNum}:clear?key=${API_KEY}`;
+    try {
+      const res = await fetch(url, { method: 'POST' });
+      if (res.ok) { setStatus('Song removed.', 'ok'); await loadSongs(); }
+      else setStatus('Could not remove — try editing the sheet directly.', 'err');
+    } catch(e) { setStatus('Network error.', 'err'); }
+  }
 
   function setStatus(msg, cls) {
     const el = document.getElementById('statusMsg');
