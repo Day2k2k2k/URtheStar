@@ -630,21 +630,73 @@
     return top >= 40 ? localFiles[best] : null;
   }
 
-  // ── Folder prompt — loads videos only ──
+  // ── Folder prompt — loads videos + syncs songs from Sheets to local songs.json ──
   document.getElementById('loadFolderBtn').addEventListener('click', async function() {
     try {
       const dirHandle = await window.showDirectoryPicker();
       localFiles = {};
+
+      // Index video files
       for await (const [name, handle] of dirHandle.entries()) {
         if (handle.kind === 'file' && /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(name)) {
           const key = name.replace(/\.[^.]+$/, '');
           localFiles[key] = handle;
         }
       }
-      const count = Object.keys(localFiles).length;
+      const videoCount = Object.keys(localFiles).length;
       folderLoaded = true;
       document.getElementById('folderPrompt').style.display = 'none';
-      setStatus(`✓ ${count} backing tracks loaded`, 'found');
+
+      // Try to fetch latest songs from Google Sheets and save locally
+      setStatus(`✓ ${videoCount} videos loaded — syncing songs…`, 'loading');
+      try {
+        const res  = await fetch(SHEET_URL);
+        const data = await res.json();
+        const rows = (data.values || []).slice(1);
+        sheetSongs = rows.filter(r => r[0]).map(r => ({
+          title:    (r[0] || '').trim(),
+          artist:   (r[1] || '').trim(),
+          fullName: r[1] ? `${r[0].trim()} – ${r[1].trim()}` : r[0].trim()
+        }));
+
+        // Write to songs.json in the folder
+        try {
+          const jsonFile = await dirHandle.getFileHandle('songs.json', { create: true });
+          const writable = await jsonFile.createWritable();
+          await writable.write(JSON.stringify(
+            sheetSongs.map((s, i) => ({
+              title:  s.title,
+              artist: s.artist,
+              genre:  (data.values[i + 1] || [])[2] || 'rock'
+            })), null, 2
+          ));
+          await writable.close();
+          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs synced from Sheets`, 'found');
+        } catch(e) {
+          // Couldn't write file — still use the fetched data in memory
+          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs loaded (couldn't save locally)`, 'found');
+        }
+
+      } catch(e) {
+        // No internet — try to read existing local songs.json
+        setStatus('Offline — looking for local songs.json…', 'loading');
+        try {
+          const jsonFile = await dirHandle.getFileHandle('songs.json');
+          const file     = await jsonFile.getFile();
+          const text     = await file.text();
+          const data     = JSON.parse(text);
+          sheetSongs = data.map(s => ({
+            title:    (s.title  || '').trim(),
+            artist:   (s.artist || '').trim(),
+            fullName: s.artist ? `${s.title.trim()} – ${s.artist.trim()}` : s.title.trim()
+          })).filter(s => s.title);
+          setStatus(`✓ ${videoCount} videos, ${sheetSongs.length} songs loaded from local cache`, 'found');
+        } catch(e2) {
+          setStatus(`✓ ${videoCount} videos loaded — no song list found`, 'missing');
+        }
+      }
+
+      renderSetlist();
     } catch(e) {
       if (e.name !== 'AbortError') setStatus('Could not load folder: ' + e.message, 'missing');
     }
