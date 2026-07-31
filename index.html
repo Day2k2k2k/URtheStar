@@ -1,19 +1,17 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ur The Star Karaoke Band</title>
-
   <style>
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #0f0f0f;
       color: #fff;
     }
-
     header {
       height: 100vh;
       display: flex;
@@ -23,17 +21,14 @@
       background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.85)),
                   url('hero.jpg') center/cover no-repeat;
     }
-
     h1 {
       font-size: 3rem;
       margin-bottom: 10px;
     }
-
     p {
       max-width: 600px;
       margin: 0 auto 20px;
     }
-
     .btn {
       background: #fc8600;
       padding: 12px 24px;
@@ -42,38 +37,32 @@
       border-radius: 5px;
       font-weight: bold;
     }
-
     section {
       padding: 60px 20px;
       text-align: center;
     }
-
     .video iframe {
       width: 100%;
       max-width: 800px;
       height: 450px;
     }
-
     .steps {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 20px;
     }
-
     .step {
       background: #1a1a1a;
       padding: 20px;
       width: 250px;
       border-radius: 10px;
     }
-
     footer {
       padding: 40px;
       text-align: center;
       background: #000;
     }
-
     input, textarea {
       width: 100%;
       max-width: 400px;
@@ -83,7 +72,6 @@
       border: none;
       border-radius: 5px;
     }
-
     button {
       padding: 10px 20px;
       background: #fc8600;
@@ -93,11 +81,8 @@
       border-radius: 5px;
     }
   </style>
-
 </head>
-
 <body>
-
 <header>
   <div>
     <img src="URTS_logo_2000px.avif" alt="Ur The Star" style="width:320px; max-width:80vw; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto;">
@@ -105,12 +90,11 @@
     <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
   <a href="#booking" class="btn">Book the Band</a>
   <a href="songs.html" class="btn" style="background:#0bb0c3;">See our song list</a>
- // <a href="request.html" class="btn" style="background:#1a1a1a; border:2px solid #fc8600; color:#fc8600;">🎵 Request a Song</a>
+  <a href="#about" class="btn" style="background:transparent; border:2px solid #fc8600; color:#fc8600;">About Us</a>
 </div>
   </div>
 </header>
-
-<section>
+<section id="about">
   <h2>What is it?</h2>
   <p>
     A live karaoke band experience where YOU become the lead singer.
@@ -118,12 +102,10 @@
   </p>
   <img src="band.avif" alt="Ur The Star band on stage" style="width:100%; max-width:800px; height:450px; object-fit:cover; border-radius:12px; margin-top:32px; display:block; margin-left:auto; margin-right:auto;">
 </section>
-
 <section class="video">
   <h2>See It In Action</h2>
   <iframe src="https://www.youtube-nocookie.com/embed/S8rty7KcOy8" frameborder="0" allowfullscreen></iframe>
 </section>
-
 <section>
   <h2>How It Works</h2>
   <div class="steps">
@@ -141,20 +123,20 @@
     </div>
   </div>
 </section>
-
 <section id="booking">
   <h2>Book the Band</h2>
-  <form>
-    <input type="text" placeholder="Your Name" required>
-    <input type="email" placeholder="Your Email" required>
-    <textarea placeholder="Tell us about your event"></textarea>
+  <form action="https://formspree.io/f/mdaqvjwd" method="POST">
+    <input type="text" name="name" placeholder="Your Name" required>
+    <input type="email" name="email" placeholder="Your Email" required>
+    <textarea name="message" placeholder="Tell us about your event" required></textarea>
+    <input type="hidden" name="_subject" value="New booking enquiry - UR The Star">
+    <!-- honeypot: bots fill this in, humans never see it -->
+    <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
     <button type="submit">Send</button>
   </form>
 </section>
-
 <footer>
   <p>© Ur The Star Karaoke Band</p>
 </footer>
-
 </body>
 </html>
